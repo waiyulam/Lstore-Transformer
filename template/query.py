@@ -28,7 +28,6 @@ class Query:
 
     def insert(self, *columns):
         columns = list(columns)
-        self.table.num_records += 1
         rid = int.from_bytes(('b'+ str(self.table.num_records)).encode("utf-8"), byteorder = "big")
         #rid = columns[self.table.key]
         schema_encoding = int('0' * self.table.num_columns)
@@ -44,6 +43,7 @@ class Query:
                 self.table.page_directory["Base"][i].append(Page())
                 page = self.table.page_directory["Base"][i][-1]
             page.write(value)
+        self.table.num_records += 1
 
     """
     # Read a record with specified key
@@ -64,7 +64,9 @@ class Query:
                     rec_id = j
                     break
 
-        int_rec_id = int.from_bytes(self.table.page_directory["Base"][INDIRECTION_COLUMN][page_id].get(rec_id), byteorder="big")
+        rec_id_string = self.table.page_directory["Base"][INDIRECTION_COLUMN][page_id].get(rec_id).decode()
+        rec_id_string = rec_id_string[rec_id_string.rfind('t'):]
+        int_rec_id = int(rec_id_string[1:])
         if  int_rec_id != MAXINT:
             is_base = False
             page_id = int(int_rec_id / 512)
@@ -79,14 +81,19 @@ class Query:
             if is_base:
                 res.append(int.from_bytes(self.table.page_directory["Base"][query_col + 3][page_id].get(rec_id), byteorder="big"))
             else:
-                ret_val = int.from_bytes(self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id), byteorder="big")
+                print(page_id, rec_id, query_col)
+                ret_val_string = self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id).decode()
+                ret_val_string = ret_val_string[ret_val_string.rfind('t'):]
+                ret_val = int(ret_val_string[1:])
                 page_id2 = copy(page_id)
                 rec_id2 = copy(rec_id)
                 while ret_val == MAXINT:
                     int_rec_id = page_id2 * 512 + rec_id2 - 1
                     page_id2 = int(int_rec_id / 512)
                     rec_id2 = int_rec_id % 512
-                    ret_val = int.from_bytes(self.table.page_directory["Tail"][query_col + 3][page_id2].get(rec_id2), byteorder="big")
+                    ret_val_string = self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id2).decode()
+                    ret_val_string = ret_val_string[ret_val_string.rfind('t'):]
+                    ret_val = int(ret_val_string[1:])
 
                 res.append(ret_val)
 
@@ -97,7 +104,6 @@ class Query:
     """
 
     def update(self, key, *columns):
-        self.table.num_updates += 1
         key_col_id = self.table.key # int
         key_pages = self.table.page_directory["Base"][3+key_col_id]
         indirection_pages = self.table.page_directory["Base"][INDIRECTION_COLUMN]
@@ -122,7 +128,10 @@ class Query:
     #        tail_indirection_id = int.from_bytes(self.table.page_directory["Base"][RID_COLUMN][update_record_page_index].get(update_record_index), byteorder = "big")
 
         #tid = self.table.num_updates
-        tid = int.from_bytes(('t'+ str(self.table.num_updates)).encode("utf-8"), byteorder = "big")
+        tid = int.from_bytes(('t'+ str(self.table.num_updates)).encode(), byteorder = "big")
+        if int_indirection_id == MAXINT:
+            int_indirection_id = self.table.page_directory["Base"][RID_COLUMN][update_record_page_index].get(update_record_index)
+            int_indirection_id = int.from_bytes(int_indirection_id, byteorder="big")
         # !!!: Need to do the encoding for lastest update
         schema_encoding = int('0' * self.table.num_columns)
         # INDIRECTION+tid
@@ -139,11 +148,12 @@ class Query:
 
             self.table.page_directory["Tail"][col_id][-1].write(col_val)
 
-        if int_indirection_id == MAXINT:
-            int_indirection_id = 0
-        else:
-            int_indirection_id += 1
-        self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].update(update_record_index, int_indirection_id)
+        #if int_indirection_id == MAXINT:
+            #int_indirection_id = tid
+    #    else:
+        #    int_indirection_id += 1
+        self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].update(update_record_index, tid)
+        self.table.num_updates += 1
 
 
 
