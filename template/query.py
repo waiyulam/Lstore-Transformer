@@ -37,10 +37,18 @@ class Query:
         base_data = meta_data
         for i, value in enumerate(base_data):
             page = self.table.page_directory["Base"][i][-1]
+<<<<<<< HEAD
+=======
+
+>>>>>>> cfad13bacb9d2f14a337516cbb1b58491cc1ea43
             # Verify Page is not full
             while not page.has_capacity():
                 self.table.page_directory["Base"][i].append(Page())
                 page = self.table.page_directory["Base"][i][-1]
+<<<<<<< HEAD
+=======
+
+>>>>>>> cfad13bacb9d2f14a337516cbb1b58491cc1ea43
             page.write(value)
 
     """
@@ -50,6 +58,10 @@ class Query:
     def select(self, key, query_columns):
         key_col_id = self.table.key # int
         pages = self.table.page_directory["Base"][key_col_id]
+<<<<<<< HEAD
+=======
+
+>>>>>>> cfad13bacb9d2f14a337516cbb1b58491cc1ea43
         b_key = (key).to_bytes(8, byteorder='big')
 
         page_id = 0
@@ -115,7 +127,6 @@ class Query:
             int_indirection_id = 0
         else:
             int_indirection_id += 1
-
         self.table.page_directory["Base"][0][update_record_page_index].update(update_record_index, int_indirection_id)
         self.table.num_updates += 1
 
