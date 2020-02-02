@@ -28,7 +28,9 @@ class Query:
 
     def insert(self, *columns):
         columns = list(columns)
-        rid = columns[self.table.key]
+        self.table.num_records += 1
+        rid = int.from_bytes(('b'+ str(self.table.num_records)).encode("utf-8"), byteorder = "big")
+        #rid = columns[self.table.key]
         schema_encoding = int('0' * self.table.num_columns)
         # INDIRECTION+RID+SCHEMA_ENCODING
         meta_data = [MAXINT,rid,schema_encoding]
@@ -95,6 +97,7 @@ class Query:
     """
 
     def update(self, key, *columns):
+        self.table.num_updates += 1
         key_col_id = self.table.key # int
         key_pages = self.table.page_directory["Base"][3+key_col_id]
         indirection_pages = self.table.page_directory["Base"][INDIRECTION_COLUMN]
@@ -114,15 +117,16 @@ class Query:
 
         int_indirection_id = int.from_bytes(indirection_id, byteorder="big")
 
-        tail_indirection_id = int_indirection_id
-        if tail_indirection_id == MAXINT:
-            tail_indirection_id = int.from_bytes(self.table.page_directory["Base"][RID_COLUMN][update_record_page_index].get(update_record_index), byteorder = "big")
+        #tail_indirection_id = int_indirection_id
+        #if tail_indirection_id == MAXINT:
+    #        tail_indirection_id = int.from_bytes(self.table.page_directory["Base"][RID_COLUMN][update_record_page_index].get(update_record_index), byteorder = "big")
 
-        tid = self.table.num_updates
+        #tid = self.table.num_updates
+        tid = int.from_bytes(('t'+ str(self.table.num_updates)).encode("utf-8"), byteorder = "big")
         # !!!: Need to do the encoding for lastest update
         schema_encoding = int('0' * self.table.num_columns)
         # INDIRECTION+tid
-        meta_data = [tail_indirection_id,tid,schema_encoding]
+        meta_data = [int_indirection_id,tid,schema_encoding]
         list_columns = list(columns)
         meta_data.extend(list_columns)
         tail_data = meta_data
@@ -140,7 +144,7 @@ class Query:
         else:
             int_indirection_id += 1
         self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].update(update_record_index, int_indirection_id)
-        self.table.num_updates += 1
+
 
 
 
