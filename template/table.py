@@ -1,4 +1,5 @@
 from template.page import *
+from template.config import *
 from time import time
 
 INDIRECTION_COLUMN = 0
@@ -41,7 +42,7 @@ class Table:
             self.page_directory["Tail"][i] = [Page()]
 
     def get(self,key):
-        key_page = self.page_directory["Base"][3+self.key]
+        key_page = self.page_directory["Base"][3 + self.key]
         for i in range(len(key_page)):
             for j in range(key_page[i].num_records):
                 if (key_page[i].get(j) == (key).to_bytes(8, byteorder='big')):
@@ -54,6 +55,12 @@ class Table:
         page_index, record_index = get(self, key)
         rid_page = self.page_directory["Base"][RID_COLUMN]
         return rid_page[page_index][record_index]
+
+    def index_to_key(self, index):
+        key_page = self.page_directory["Base"][3 + self.key]
+        page_index = index // MAX_RECORDS
+        record_index = index % MAX_RECORDS
+        return key_page[page_index][record_index]
 
     def __merge(self):
         pass
