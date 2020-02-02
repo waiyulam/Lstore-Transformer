@@ -42,8 +42,8 @@ class Table:
 
     def get(self,key):
         key_page = self.page_directory["Base"][3+self.key]
-        for i in range(len(rid_page)):
-            for j in range(rid_page[i].num_records):
+        for i in range(len(key_page)):
+            for j in range(key_page[i].num_records):
                 if (key_page[i].get(j) == (key).to_bytes(8, byteorder='big')):
                     record_index = j
                     record_page_index = i
