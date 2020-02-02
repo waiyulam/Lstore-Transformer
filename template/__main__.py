@@ -5,7 +5,7 @@ from random import choice, randrange
 
 # Student Id and 4 grades
 db = Database()
-grades_table = db.create_table('Grades', 0, 5)
+grades_table = db.create_table('Grades', 5, 0)
 query = Query(grades_table)
 keys = []
 
@@ -17,7 +17,7 @@ for i in range(0, 10000):
 insert_time_1 = process_time()
 
 print("Inserting 10k records took:  \t\t\t", insert_time_1 - insert_time_0)
-
+import pdb; pdb.set_trace();
 # Measuring update Performance
 update_cols = [
     [randrange(0, 100), None, None, None, None],

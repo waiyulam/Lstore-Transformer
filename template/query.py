@@ -27,17 +27,20 @@ class Query:
     """
 
     def insert(self, *columns):
-        schema_encoding = int('0' * self.table.num_columns)
         columns = list(columns)
-        columns.extend([schema_encoding, MAXINT])
-        for i, value in enumerate(columns):
+        rid = columns[self.table.key]
+        schema_encoding = int('0' * self.table.num_columns)
+        # INDIRECTION+RID+SCHEMA_ENCODING
+        meta_data = [MAXINT,rid,schema_encoding]
+        columns = list(columns)
+        meta_data.extend(columns)
+        base_data = meta_data
+        for i, value in enumerate(base_data):
             page = self.table.page_directory["Base"][i][-1]
-
             # Verify Page is not full
             while not page.has_capacity():
                 self.table.page_directory["Base"][i].append(Page())
                 page = self.table.page_directory["Base"][i][-1]
-
             page.write(value)
 
     """
@@ -47,7 +50,6 @@ class Query:
     def select(self, key, query_columns):
         key_col_id = self.table.key # int
         pages = self.table.page_directory["Base"][key_col_id]
-
         b_key = (key).to_bytes(8, byteorder='big')
 
         page_id = 0
@@ -73,12 +75,10 @@ class Query:
 
     def update(self, key, *columns):
         key_col_id = self.table.key # int
-        key_pages = self.table.page_directory["Base"][key_col_id]
-        indirection_pages = self.table.page_directory["Base"][len(columns)+1]
+        key_pages = self.table.page_directory["Base"][3+key_col_id]
+        indirection_pages = self.table.page_directory["Base"][0]
         update_record_index = 0
         update_record_page_index = 0
-
-
         b_key = (key).to_bytes(8, byteorder='big')
 
         indirection_id = MAXINT
@@ -89,15 +89,20 @@ class Query:
                     update_record_page_index = i
                     break
 
-        indirection_id = self.table.page_directory["Base"][len(columns)+1][update_record_page_index].get(update_record_index)
+        indirection_id = self.table.page_directory["Base"][0][update_record_page_index].get(update_record_index)
 
         int_indirection_id = int.from_bytes(indirection_id, byteorder="big")
 
 
+        tid = self.table.num_updates
+        # !!!: Need to do the encoding for lastest update 
+        schema_encoding = int('0' * self.table.num_columns)
+        # INDIRECTION+tid
+        meta_data = [int_indirection_id,tid,schema_encoding]
         list_columns = list(columns)
-        list_columns.extend([self.table.num_updates, int_indirection_id])
-        for col_id, col_val in enumerate(list_columns):
-            print(col_val)
+        meta_data.extend(list_columns)
+        tail_data = meta_data
+        for col_id, col_val in enumerate(tail_data):
             if col_val == None:
                 col_val = MAXINT
             # Create New Page if current tail of tail page if fulled
@@ -111,12 +116,8 @@ class Query:
         else:
             int_indirection_id += 1
 
-        self.table.page_directory["Base"][len(columns)+1][update_record_page_index].update(update_record_index, int_indirection_id)
+        self.table.page_directory["Base"][0][update_record_page_index].update(update_record_index, int_indirection_id)
         self.table.num_updates += 1
-
-
-
-
 
 
 

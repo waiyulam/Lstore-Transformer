@@ -3,8 +3,8 @@ from time import time
 
 INDIRECTION_COLUMN = 0
 RID_COLUMN = 1
-TIMESTAMP_COLUMN = 2
-SCHEMA_ENCODING_COLUMN = 3
+# TIMESTAMP_COLUMN = 2
+SCHEMA_ENCODING_COLUMN = 2
 
 
 class Record:
@@ -35,9 +35,13 @@ class Table:
             "Tail": {}
         }
 
-        for i in range(self.num_columns + 2):
+        for i in range(self.num_columns + 3):
             self.page_directory["Base"][i] = [Page()]
             self.page_directory["Tail"][i] = [Page()]
+    
+    def get(self,rid):
+        key_pages = self.table.page_directory["Base"][key_col_id]
+
 
     def __merge(self):
         pass

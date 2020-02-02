@@ -44,7 +44,6 @@ class Query_Tester:
 
     def run_all(self):
         self.test_insert()
-        self.test_select()
         self.test_update()
 
 def main():
