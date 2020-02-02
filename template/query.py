@@ -165,19 +165,12 @@ class Query:
     """
 
     def sum(self, start_range, end_range, aggregate_column_index):
-        count = 0
-        start_index = 0
-        end_index = 0
-        for temp_key in self.table.page_directory["Base"][RID_COLUMN]:
-            if temp_key == start_range:
-                start_index = count
-            if temp_key == end_range:
-                end_index = count
-            count += 1
-        selected_keys = self.table.page_directory["Base"][RID_COLUMN][start_index:end_index+1]
+        selected_keys = [] # selected keys in bytes
+        for index in range(start_range, end_range + 1):
+            selected_keys.append(int.from_bytes(self.table.index_to_key(index)))
         result = 0
         for key in selected_keys:
             encoder = [0] * self.table.num_columns
-            encoder[aggregate_column_index-1] = 1
+            encoder[aggregate_column_index] = 1
             result += select(self, key, encoder)[aggregate_column_index]
         return result

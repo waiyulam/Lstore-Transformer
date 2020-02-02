@@ -2,18 +2,13 @@ from template.page import *
 from template.config import *
 from time import time
 
-INDIRECTION_COLUMN = 0
-RID_COLUMN = 1
-# TIMESTAMP_COLUMN = 2
-SCHEMA_ENCODING_COLUMN = 2
-
-
 class Record:
 
     def __init__(self, rid, key, columns):
         self.rid = rid
         self.key = key
         self.columns = columns
+        self.indirection = None
 
 class Table:
 
@@ -52,15 +47,15 @@ class Table:
         return record_page_index,record_index
     
     def key_to_rid(self, key):
-        page_index, record_index = get(self, key)
+        page_index, record_index = self.get(self, key)
         rid_page = self.page_directory["Base"][RID_COLUMN]
-        return rid_page[page_index][record_index]
+        return rid_page[page_index][record_index] # in bytes
 
     def index_to_key(self, index):
         key_page = self.page_directory["Base"][3 + self.key]
         page_index = index // MAX_RECORDS
         record_index = index % MAX_RECORDS
-        return key_page[page_index][record_index]
+        return key_page[page_index][record_index] # in bytes
 
     def __merge(self):
         pass
