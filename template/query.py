@@ -71,6 +71,7 @@ class Query:
         res = []
         for query_col, val in enumerate(query_columns):
             if val != 1:
+                res.append(None)
                 continue
             
             if is_base: 

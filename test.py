@@ -27,10 +27,13 @@ class Query_Tester:
         res = self.query.select(512, [1, 1, 1, 1, 1, 1])
         print(res)
 
+        res = self.query.select(512, [0, 1, 0, 1, 0, 1])
+        print(res)
+
         res = self.query.select(511, [1, 1, 1, 1, 1, 1])
         print(res)
 
-        res = self.query.select(510, [1, 1, 1, 1, 1, 1])
+        res = self.query.select(510, [1, 0, 1, 0, 1, 0])
         print(res)
 
     def test_update(self):
