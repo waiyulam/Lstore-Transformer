@@ -61,8 +61,8 @@ class Query:
                     page_id = i
                     rec_id = j
                     break
-        
-        int_rec_id = int.from_bytes(self.table.page_directory["Base"][0][page_id].get(rec_id), byteorder="big")
+
+        int_rec_id = int.from_bytes(self.table.page_directory["Base"][INDIRECTION_COLUMN][page_id].get(rec_id), byteorder="big")
         if  int_rec_id != MAXINT:
             is_base = False
             page_id = int(int_rec_id / 512)
@@ -72,8 +72,8 @@ class Query:
         for query_col, val in enumerate(query_columns):
             if val != 1:
                 continue
-            
-            if is_base: 
+
+            if is_base:
                 res.append(int.from_bytes(self.table.page_directory["Base"][query_col + 3][page_id].get(rec_id), byteorder="big"))
             else:
                 ret_val = int.from_bytes(self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id), byteorder="big")
@@ -83,8 +83,8 @@ class Query:
                     int_rec_id = page_id2 * 512 + rec_id2 - 1
                     page_id2 = int(int_rec_id / 512)
                     rec_id2 = int_rec_id % 512
-                    ret_val = int.from_bytes(self.table.page_directory["Tail"][query_col + 3][page_id2].get(rec_id2), byteorder="big")                
-                
+                    ret_val = int.from_bytes(self.table.page_directory["Tail"][query_col + 3][page_id2].get(rec_id2), byteorder="big")
+
                 res.append(ret_val)
 
         return res
@@ -96,7 +96,7 @@ class Query:
     def update(self, key, *columns):
         key_col_id = self.table.key # int
         key_pages = self.table.page_directory["Base"][3+key_col_id]
-        indirection_pages = self.table.page_directory["Base"][0]
+        indirection_pages = self.table.page_directory["Base"][INDIRECTION_COLUMN]
         update_record_index = 0
         update_record_page_index = 0
         b_key = (key).to_bytes(8, byteorder='big')
@@ -109,13 +109,13 @@ class Query:
                     update_record_page_index = i
                     break
 
-        indirection_id = self.table.page_directory["Base"][0][update_record_page_index].get(update_record_index)
+        indirection_id = self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].get(update_record_index)
 
         int_indirection_id = int.from_bytes(indirection_id, byteorder="big")
 
 
         tid = self.table.num_updates
-        # !!!: Need to do the encoding for lastest update 
+        # !!!: Need to do the encoding for lastest update
         schema_encoding = int('0' * self.table.num_columns)
         # INDIRECTION+tid
         meta_data = [int_indirection_id,tid,schema_encoding]
@@ -135,7 +135,7 @@ class Query:
             int_indirection_id = 0
         else:
             int_indirection_id += 1
-        self.table.page_directory["Base"][0][update_record_page_index].update(update_record_index, int_indirection_id)
+        self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].update(update_record_index, int_indirection_id)
         self.table.num_updates += 1
 
 
