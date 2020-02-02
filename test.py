@@ -10,20 +10,33 @@ class Query_Tester:
         self.db = Database()
         self.table = self.db.create_table("test", 6, 0)    
 
-    def test_query(self):
-        query = Query(self.table)
+    def test_insert(self):
+        self.query = Query(self.table)
 
         for i in range(513):
-            query.insert(i, 0, 1, 2, 3, 4)
+            self.query.insert(i, 1+i, 2+i, 3+i, 4+i, 5+i)
         
-        for col_id in range(len(self.table.page_directory["Base"])):
-            for p_val in self.table.page_directory["Base"][col_id]:
-                print("{}".format(col_id))
-                print(p_val.data[0:100])
+        # for col_id in range(len(self.table.page_directory["Base"])):
+        #     for p_val in self.table.page_directory["Base"][col_id]:
+        #         print("{}".format(col_id))
+        #         print(p_val.data[0:100])
+
+
+    def test_select(self):
+        for i in range(513):
+            res = self.query.select(i, [1, 1, 1, 1, 1, 1, 1])
+            print(i, res)
+
+        # for col_id in range(len(self.table.page_directory["Base"])):
+        #     for p_val in self.table.page_directory["Base"][col_id]:
+        #         print("{}".format(col_id))
+        #         print(p_val.data[0:100])
 
 
     def run_all(self):
-        self.test_query()
+        self.test_insert()
+        self.test_select()
+
 
 def main():
     query_tester = Query_Tester()

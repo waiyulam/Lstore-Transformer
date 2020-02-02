@@ -26,6 +26,7 @@ class Table:
         self.key = key
         self.num_columns = num_columns
         self.page_directory = {}
+        self.num_updates = 0
         self.__init_pages()
 
     def __init_pages(self):

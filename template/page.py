@@ -12,3 +12,6 @@ class Page:
     def write(self, value):
         self.data[self.num_records * 8 : (self.num_records+1) * 8] = (value).to_bytes(8, byteorder='big')
         self.num_records += 1
+
+    def get(self, index):
+        return self.data[index*8 : (index+1)*8]
