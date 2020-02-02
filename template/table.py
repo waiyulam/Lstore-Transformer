@@ -26,7 +26,17 @@ class Table:
         self.key = key
         self.num_columns = num_columns
         self.page_directory = {}
-        pass
+        self.__init_pages()
+
+    def __init_pages(self):
+        self.page_directory = {
+            "Base": {},
+            "Tail": {}
+        }
+
+        for i in range(self.num_columns + 2):
+            self.page_directory["Base"][i] = [Page()]
+            self.page_directory["Tail"][i] = [Page()]
 
     def __merge(self):
         pass
