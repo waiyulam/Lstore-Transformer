@@ -49,8 +49,11 @@ class Table:
                     record_page_index = i
                     break
         return record_page_index,record_index
-
-
+    
+    def key_to_rid(self, key):
+        page_index, record_index = get(self, key)
+        rid_page = self.page_directory["Base"][RID_COLUMN]
+        return rid_page[page_index][record_index]
 
     def __merge(self):
         pass
