@@ -45,14 +45,14 @@ class Query_Tester:
         self.query.update(512, *[None, None, None, None, None,  256])
 
 
-        # for col_id in range(len(self.table.page_directory["Tail"])):
-        #     for p_val in self.table.page_directory["Tail"][col_id]:
-        #         print("{}".format(col_id))
-        #         print(p_val.data[0:100])
-        # for col_id in range(len(self.table.page_directory["Base"])):
-        #     for p_val in self.table.page_directory["Base"][col_id]:
-        #         print("{}".format(col_id))
-        #         print(p_val.data[0:100])
+        for col_id in range(len(self.table.page_directory["Tail"])):
+             for p_val in self.table.page_directory["Tail"][col_id]:
+                 print("{}".format(col_id))
+                 print(p_val.data[0:100])
+        #for col_id in range(len(self.table.page_directory["Base"])):
+        #    for p_val in self.table.page_directory["Base"][col_id]:
+        #        print("{}".format(col_id))
+        #        print(p_val.data[0:100])
 
 
     def run_all(self):

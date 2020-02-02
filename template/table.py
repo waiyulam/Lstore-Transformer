@@ -27,6 +27,7 @@ class Table:
         self.num_columns = num_columns
         self.page_directory = {}
         self.num_updates = 0
+        self.num_records = 0
         self.__init_pages()
 
     def __init_pages(self):
@@ -38,7 +39,7 @@ class Table:
         for i in range(self.num_columns + 3):
             self.page_directory["Base"][i] = [Page()]
             self.page_directory["Tail"][i] = [Page()]
-    
+
     def get(self,rid):
         rid_page = self.page_directory["Base"][RID_COLUMN]
         for i in range(len(rid_page)):
@@ -53,4 +54,3 @@ class Table:
 
     def __merge(self):
         pass
- 
