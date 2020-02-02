@@ -40,8 +40,16 @@ class Table:
             self.page_directory["Base"][i] = [Page()]
             self.page_directory["Tail"][i] = [Page()]
 
-    def get(self,rid):
-        key_pages = self.table.page_directory["Base"][key_col_id]
+    def get(self,key):
+        key_page = self.page_directory["Base"][3+self.key]
+        for i in range(len(rid_page)):
+            for j in range(rid_page[i].num_records):
+                if (key_page[i].get(j) == (key).to_bytes(8, byteorder='big')):
+                    record_index = j
+                    record_page_index = i
+                    break
+        return record_page_index,record_index
+
 
 
     def __merge(self):
