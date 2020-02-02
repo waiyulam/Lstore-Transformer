@@ -37,18 +37,10 @@ class Query:
         base_data = meta_data
         for i, value in enumerate(base_data):
             page = self.table.page_directory["Base"][i][-1]
-<<<<<<< HEAD
-=======
-
->>>>>>> cfad13bacb9d2f14a337516cbb1b58491cc1ea43
             # Verify Page is not full
             while not page.has_capacity():
                 self.table.page_directory["Base"][i].append(Page())
                 page = self.table.page_directory["Base"][i][-1]
-<<<<<<< HEAD
-=======
-
->>>>>>> cfad13bacb9d2f14a337516cbb1b58491cc1ea43
             page.write(value)
 
     """
@@ -57,13 +49,10 @@ class Query:
 
     def select(self, key, query_columns):
         key_col_id = self.table.key # int
-        pages = self.table.page_directory["Base"][key_col_id]
-<<<<<<< HEAD
-=======
-
->>>>>>> cfad13bacb9d2f14a337516cbb1b58491cc1ea43
+        pages = self.table.page_directory["Base"][key_col_id + 3]
         b_key = (key).to_bytes(8, byteorder='big')
 
+        is_base = True
         page_id = 0
         rec_id = 0
         for i in range(len(pages)):
@@ -72,12 +61,31 @@ class Query:
                     page_id = i
                     rec_id = j
                     break
+        
+        int_rec_id = int.from_bytes(self.table.page_directory["Base"][0][page_id].get(rec_id), byteorder="big")
+        if  int_rec_id != MAXINT:
+            is_base = False
+            page_id = int(int_rec_id / 512)
+            rec_id = int_rec_id % 512
 
         res = []
         for query_col, val in enumerate(query_columns):
             if val != 1:
                 continue
-            res.append(int.from_bytes(self.table.page_directory["Base"][query_col][page_id].get(rec_id), byteorder="big"))
+            
+            if is_base: 
+                res.append(int.from_bytes(self.table.page_directory["Base"][query_col + 3][page_id].get(rec_id), byteorder="big"))
+            else:
+                ret_val = int.from_bytes(self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id), byteorder="big")
+                page_id2 = copy(page_id)
+                rec_id2 = copy(rec_id)
+                while ret_val == MAXINT:
+                    int_rec_id = page_id2 * 512 + rec_id2 - 1
+                    page_id2 = int(int_rec_id / 512)
+                    rec_id2 = int_rec_id % 512
+                    ret_val = int.from_bytes(self.table.page_directory["Tail"][query_col + 3][page_id2].get(rec_id2), byteorder="big")                
+                
+                res.append(ret_val)
 
         return res
 
