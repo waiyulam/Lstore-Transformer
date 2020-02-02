@@ -114,12 +114,15 @@ class Query:
 
         int_indirection_id = int.from_bytes(indirection_id, byteorder="big")
 
+        tail_indirection_id = int_indirection_id
+        if tail_indirection_id == MAXINT:
+            tail_indirection_id = int.from_bytes(self.table.page_directory["Base"][RID_COLUMN][update_record_page_index].get(update_record_index), byteorder = "big")
 
         tid = self.table.num_updates
         # !!!: Need to do the encoding for lastest update
         schema_encoding = int('0' * self.table.num_columns)
         # INDIRECTION+tid
-        meta_data = [int_indirection_id,tid,schema_encoding]
+        meta_data = [tail_indirection_id,tid,schema_encoding]
         list_columns = list(columns)
         meta_data.extend(list_columns)
         tail_data = meta_data
