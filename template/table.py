@@ -49,13 +49,13 @@ class Table:
     def key_to_rid(self, key):
         page_index, record_index = self.get(self, key)
         rid_page = self.page_directory["Base"][RID_COLUMN]
-        return rid_page[page_index][record_index] # in bytes
+        return rid_page[page_index].get(record_index) # in bytes
 
     def index_to_key(self, index):
         key_page = self.page_directory["Base"][3 + self.key]
         page_index = index // MAX_RECORDS
         record_index = index % MAX_RECORDS
-        return key_page[page_index][record_index] # in bytes
+        return key_page[page_index].get(record_index) # in bytes
 
     def __merge(self):
         pass

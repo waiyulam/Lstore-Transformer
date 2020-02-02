@@ -167,10 +167,10 @@ class Query:
     def sum(self, start_range, end_range, aggregate_column_index):
         selected_keys = [] # selected keys in bytes
         for index in range(start_range, end_range + 1):
-            selected_keys.append(int.from_bytes(self.table.index_to_key(index)))
+            selected_keys.append(int.from_bytes(self.table.index_to_key(index), byteorder = "big"))
         result = 0
         for key in selected_keys:
             encoder = [0] * self.table.num_columns
             encoder[aggregate_column_index] = 1
-            result += select(self, key, encoder)[aggregate_column_index]
+            result += (self.select(key, encoder))[aggregate_column_index]
         return result
