@@ -49,9 +49,53 @@ class Query_Tester:
         self.test_select1()
         self.test_update1()
 
+class Table_Tester:
+    def __init__(self):
+        self.db = Database()
+        self.table = self.db.create_table('Grades', 5, 0)
+        self.query = Query(self.table)
+        self.keys = []
+        for i in range(10):
+            self.query.insert(100 + i, 93, 65, 43, 87)
+            self.keys.append(100 + i)
+    
+    def get_tester(self):
+        key = 103
+        page_index,record_index = self.table.get(key)
+        print("page_index = " + str(page_index) + 
+        " record_index = " + str(record_index))
+    
+    def ktr_tester(self):
+        key = 103
+        rid = self.table.key_to_rid(key)
+        rid = rid.decode("utf-8") 
+        print("RID = " + str(rid))
+
+    def itk_tester(self):
+        index = 3
+        key = self.table.index_to_key(index)
+        key = int.from_bytes(key, byteorder = "big")
+        print("KEY = " + str(key))
+
+    def sum_tester(self):
+        result = self.query.sum(0, 3, 2)
+        for i in result:
+            print("it is : " + str(i))
+        # print("score: = " + str(result))
+
+    def run_all(self):
+        self.get_tester()
+        self.ktr_tester()
+        self.itk_tester()
+
+        # put here for now, should be in query
+        self.sum_tester()
+
 def main():
     query_tester = Query_Tester()
     query_tester.run_all()
+    table_tester = Table_Tester()
+    table_tester.run_all()
 
 if __name__ == "__main__":
     main()

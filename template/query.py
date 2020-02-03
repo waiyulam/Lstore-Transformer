@@ -137,12 +137,17 @@ class Query:
     """
 
     def sum(self, start_range, end_range, aggregate_column_index):
+        # end_range is the number of keys should be selected
         selected_keys = [] # selected keys in bytes
-        for index in range(start_range, end_range + 1):
+        end_index = start_range + end_range
+        for index in range(start_range, end_index):
             selected_keys.append(int.from_bytes(self.table.index_to_key(index), byteorder = "big"))
-        result = 0
-        for key in selected_keys:
-            encoder = [0] * self.table.num_columns
-            encoder[aggregate_column_index] = 1
-            result += (self.select(key, encoder))[aggregate_column_index]
-        return result
+        return selected_keys
+        
+        # uncomment after fixing select
+        # result = 0
+        # for key in selected_keys:
+        #     encoder = [0] * self.table.num_columns
+        #     encoder[aggregate_column_index] = 1
+        #     result += (self.select(key, encoder))[aggregate_column_index]
+        # return result
