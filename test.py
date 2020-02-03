@@ -13,55 +13,41 @@ class Query_Tester:
 
     def test_insert(self):
         keys = []
-        for i in range(0, 513):
-            self.query.insert(906659671 + i, 93, 0, 0, 0, 0 )
+        for i in range(0, 10):
+            self.query.insert(906659671 + i, 93, i, i, i, i )
             keys.append(906659671 + i)
             page_index,record_index = self.table.get(keys[i])
-            record = []
+            records = []
             for j in range(len(self.table.page_directory["Base"])):
                 byte_value = self.table.page_directory["Base"][j][page_index].get(record_index)
                 if (j == 1):
-                    record.append(byte_value.decode()[4:])
+                    records.append(byte_value.decode()[4:])
                 else:
-                    record.append(int.from_bytes(byte_value, byteorder='big'))
-            print(record)
+                    records.append(int.from_bytes(byte_value, byteorder='big'))
+            print(records)
 
-
-    def test_select(self):
-        # for i in range(512):
-        res = self.query.select(512, [1, 1, 1, 1, 1, 1])
+    # select record without updates 
+    def test_select1(self):
+        res = self.query.select(906659671, [1, 1, 1, 1, 1, 1])
+        print(res)
+        res = self.query.select(906659681, [1, 0, 1, 0, 1, 1])
         print(res)
 
-        res = self.query.select(512, [0, 1, 0, 1, 0, 1])
+    def test_update1(self):
+        self.query.update(906659671, *[None, 94, None, None, None, None])
+        res = self.query.select(906659671, [1, 1, 1, 1, 1, 1])
         print(res)
 
-        res = self.query.select(511, [1, 1, 1, 1, 1, 1])
-        print(res)
 
-        res = self.query.select(510, [1, 0, 1, 0, 1, 0])
-        print(res)
-
-    def test_update(self):
-        self.query.update(512, *[10000, None, None, None, None, None])
-        self.query.update(512, *[None, 4096, 2048, None, None, None])
-        self.query.update(512, *[None, None, 2048, None, None, None])
-        self.query.update(512, *[None, None, None, 1024, None, None])
-        self.query.update(512, *[None, None, None, None,  512, None])
-        self.query.update(512, *[None, None, None, None, None,  256])
-
-
-        for col_id in range(len(self.table.page_directory["Tail"])):
-             for p_val in self.table.page_directory["Tail"][col_id]:
-                 print("{}".format(col_id))
-                 print(p_val.data[0:100])
-        #for col_id in range(len(self.table.page_directory["Base"])):
-        #    for p_val in self.table.page_directory["Base"][col_id]:
-        #        print("{}".format(col_id))
-        #        print(p_val.data[0:100])
+    def test_sum(self):
+        for i in range(0, 5):
+            self.query.insert(906659671 + i, 93, 0, 0, 0, 0 )
 
 
     def run_all(self):
         self.test_insert()
+        self.test_select1()
+        self.test_update1()
 
 def main():
     query_tester = Query_Tester()
