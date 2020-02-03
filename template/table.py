@@ -11,6 +11,8 @@ class Record:
         self.columns = columns
         self.indirection = None
 
+
+
 class Table:
 
     """

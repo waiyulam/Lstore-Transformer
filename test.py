@@ -21,7 +21,7 @@ class Query_Tester:
             for j in range(len(self.table.page_directory["Base"])):
                 byte_value = self.table.page_directory["Base"][j][page_index].get(record_index)
                 if (j == 1):
-                    records.append(byte_value.decode()[4:])
+                    records.append(byte_value.decode())
                 else:
                     records.append(int.from_bytes(byte_value, byteorder='big'))
             print(records)
@@ -37,6 +37,16 @@ class Query_Tester:
         self.query.update(906659671, *[None, 94, None, None, None, None])
         res = self.query.select(906659671, [1, 1, 1, 1, 1, 1])
         print(res)
+        self.query.update(906659671, *[None, 97, None, None, None, None])
+        res = self.query.select(906659671, [1, 1, 1, 1, 1, 1])
+        print(res)
+        self.query.update(906659671, *[None, None, None, 92, None, None])
+        res = self.query.select(906659671, [1, 1, 1, 1, 1, 1])
+        print(res)
+        # for i in range(len(self.table.page_directory["Tail"][0])):
+        #     for j in range(0,10):
+        #         byte_value = self.table.page_directory["Tail"][0][i].get(j)
+        #         print(byte_value.decode())
 
 
     def test_sum(self):
@@ -87,15 +97,14 @@ class Table_Tester:
         self.get_tester()
         self.ktr_tester()
         self.itk_tester()
-
         # put here for now, should be in query
         self.sum_tester()
 
 def main():
     query_tester = Query_Tester()
     query_tester.run_all()
-    table_tester = Table_Tester()
-    table_tester.run_all()
+    # table_tester = Table_Tester()
+    # table_tester.run_all()
 
 if __name__ == "__main__":
     main()

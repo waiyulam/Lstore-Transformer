@@ -10,7 +10,7 @@ class Page:
         return self.num_records < MAX_RECORDS
 
     """
-    :param value: int         #
+    :param value: int  #
     """
     def write(self, value):
         self.data[self.num_records * 8 : (self.num_records+1) * 8] = (value).to_bytes(8, byteorder='big')
