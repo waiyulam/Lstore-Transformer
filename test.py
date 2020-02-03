@@ -79,9 +79,7 @@ class Table_Tester:
 
     def sum_tester(self):
         result = self.query.sum(0, 3, 2)
-        for i in result:
-            print("it is : " + str(i))
-        # print("score: = " + str(result))
+        print("score: = " + str(result))
 
     def run_all(self):
         self.get_tester()
@@ -92,10 +90,13 @@ class Table_Tester:
         self.sum_tester()
 
 def main():
+    print("\n*** TEST query ***\n")
     query_tester = Query_Tester()
     query_tester.run_all()
+    print("\n*** TEST table ***\n")
     table_tester = Table_Tester()
     table_tester.run_all()
 
 if __name__ == "__main__":
+    os.system("clear")
     main()
