@@ -64,13 +64,18 @@ class Query:
                     rec_id = j
                     break
 
-        rec_id_string = self.table.page_directory["Base"][INDIRECTION_COLUMN][page_id].get(rec_id).decode()
-        rec_id_string = rec_id_string[rec_id_string.rfind('t'):]
-        int_rec_id = int(rec_id_string[1:])
-        if  int_rec_id != MAXINT:
-            is_base = False
-            page_id = int(int_rec_id / 512)
-            rec_id = int_rec_id % 512
+        rec_id_byte = self.table.page_directory["Base"][INDIRECTION_COLUMN][page_id].get(rec_id)
+        rec_id_int = int.from_bytes(rec_id_byte, byteorder = "big")
+        if rec_id_int == MAXINT:
+            rec_id = None
+        else:
+            rec_id_string = self.table.page_directory["Base"][INDIRECTION_COLUMN][page_id].get(rec_id).decode()
+            rec_id_string = rec_id_string[rec_id_string.rfind('t'):]
+            int_rec_id = int(rec_id_string[1:])
+            if  int_rec_id != MAXINT:
+                is_base = False
+                page_id = int(int_rec_id / 512)
+                rec_id = int_rec_id % 512
 
         res = []
         for query_col, val in enumerate(query_columns):
@@ -82,20 +87,26 @@ class Query:
                 res.append(int.from_bytes(self.table.page_directory["Base"][query_col + 3][page_id].get(rec_id), byteorder="big"))
             else:
                 print(page_id, rec_id, query_col)
-                ret_val_string = self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id).decode()
-                ret_val_string = ret_val_string[ret_val_string.rfind('t'):]
-                ret_val = int(ret_val_string[1:])
-                page_id2 = copy(page_id)
-                rec_id2 = copy(rec_id)
-                while ret_val == MAXINT:
-                    int_rec_id = page_id2 * 512 + rec_id2 - 1
-                    page_id2 = int(int_rec_id / 512)
-                    rec_id2 = int_rec_id % 512
-                    ret_val_string = self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id2).decode()
-                    ret_val_string = ret_val_string[ret_val_string.rfind('t'):]
-                    ret_val = int(ret_val_string[1:])
+                ret_val_byte = self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id)
+                print(ret_val_byte)
+                ret_val_int = int.from_bytes(ret_val_byte, byteorder = "big")
+                if ret_val_int == MAXINT:
+                    res.append(None)
+                else:
+                    ret_val = int.from_bytes(self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id), byteorder = "big")
+                    #ret_val_string = ret_val_string[ret_val_string.rfind('t'):]
+                    #ret_val = int(ret_val_string[1:])
+                    page_id2 = copy(page_id)
+                    rec_id2 = copy(rec_id)
+                    while ret_val == MAXINT:
+                        int_rec_id = page_id2 * 512 + rec_id2 - 1
+                        page_id2 = int(int_rec_id / 512)
+                        rec_id2 = int_rec_id % 512
+                        ret_val_string = self.table.page_directory["Tail"][query_col + 3][page_id].get(rec_id2).decode()
+                        ret_val_string = ret_val_string[ret_val_string.rfind('t'):]
+                        ret_val = int(ret_val_string[1:])
 
-                res.append(ret_val)
+                    res.append(ret_val)
 
         return res
 
