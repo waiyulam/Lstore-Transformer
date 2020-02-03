@@ -1,12 +1,15 @@
 from template.db import Database
 from template.query import Query
-from template.config import init
+# from template.config import init
+from template.config import *
 
 from random import choice, randint, sample
 from colorama import Fore, Back, Style
+import os
 
+os.system('clear')
 # Student Id and 4 grades
-init()
+# init()
 db = Database()
 grades_table = db.create_table('Grades', 5, 0)
 query = Query(grades_table)
