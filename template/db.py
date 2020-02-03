@@ -6,7 +6,7 @@ class Database():
         self.tables = []
         pass
 
-    def open(self):
+    def open(self, path):
         pass
 
     def close(self):
@@ -20,6 +20,8 @@ class Database():
     """
     def create_table(self, name, num_columns, key):
         table = Table(name, num_columns, key)
+        # create a new table in database 
+        self.tables.append(table)
         return table
 
     """

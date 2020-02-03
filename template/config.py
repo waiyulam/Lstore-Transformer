@@ -1,7 +1,9 @@
 # Global Setting for the Database
 # PageSize, StartRID, etc..
 
+MAX_RECORDS = 512 # 4096/8
 MAXINT = 2**64 - 1
+NUM_METAS = 3
 INDIRECTION_COLUMN = 0
 RID_COLUMN = 1
 # TIMESTAMP_COLUMN = 2
