@@ -1,5 +1,6 @@
 from template.page import *
 from template.config import *
+from template.index import Index
 from time import time
 
 class Record:
@@ -22,6 +23,7 @@ class Table:
         self.key = key
         self.num_columns = num_columns
         self.page_directory = {}
+        self.index = Index(self) # newly added
         self.num_updates = 0
         self.num_records = 0
         self.__init_pages()
