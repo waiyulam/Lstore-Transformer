@@ -54,7 +54,7 @@ class Table:
                     break
         return record_page_index,record_index
 
-    # want to find physical location of tail record given tid 
+    # want to find physical location of tail record given tid
     # tid : bytesarray
     def get_tail(self,tid):
         tid_page = self.page_directory["Tail"][RID_COLUMN]
@@ -68,8 +68,8 @@ class Table:
                     break
         return record_page_index,record_index
 
-    # return the columns of attributes given tail record 
-    def get_tail_columns(self,tid):
+    # return the columns of attributes given tail record
+    def get_tail_columns(self, tid):
         tid_page = self.page_directory["Tail"][RID_COLUMN]
         record_index = 0
         record_page_index = 0
@@ -82,12 +82,27 @@ class Table:
                     break
         return columns
 
-    
+    # return the specific column of the table
+    def get_column(self, key):
+        #print(self.page_directory["Base"][6][0].data)
+        indirection_page = self.page_directory["Base"][INDIRECTION_COLUMN]
+        column = []
+        for i in range(len(indirection_page)):
+            for j in range(indirection_page[i].num_records):
+                indir_num = int.from_bytes(indirection_page[i].get(j), byteorder="big")
+                if indir_num != MAXINT:
+                    indir_String = indir_num.decode()
+                    indir_int = int(indir_String[1:])
+                    column.append(self.page_directory["Tail"][NUM_METAS+key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
+                else:
+                    column.append(self.page_directory["Base"][NUM_METAS+key][i].get(j))
+        return column
+
     def key_to_rid(self, key):
         page_index, record_index = self.get(key)
         rid_page = self.page_directory["Base"][RID_COLUMN]
         return rid_page[page_index].get(record_index) # in bytes
-    
+
     def key_to_indirect(self,key):
         page_index, record_index = self.get(key)
         indirect_page = self.page_directory["Base"][INDIRECTION_COLUMN]

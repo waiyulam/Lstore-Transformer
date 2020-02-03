@@ -11,7 +11,7 @@ class Index:
         pass
 
     """
-    # returns the location of all records with the given value on column "column"
+    # returns the location of all records with the given value on column "column", list of RIDs
     """
 
     def locate(self, column, value):

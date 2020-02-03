@@ -26,14 +26,16 @@ class Query_Tester:
                     records.append(int.from_bytes(byte_value, byteorder='big'))
             print(records)
 
-    # select record without updates 
+    # select record without updates
     def test_select1(self):
+        print("test: select\n")
         res = self.query.select(906659671, [1, 1, 1, 1, 1, 1])
         print(res)
         res = self.query.select(906659681, [1, 0, 1, 0, 1, 1])
         print(res)
 
     def test_update1(self):
+        print("test: update\n")
         self.query.update(906659671, *[None, 94, None, None, None, None])
         res = self.query.select(906659671, [1, 1, 1, 1, 1, 1])
         print(res)
@@ -68,18 +70,24 @@ class Table_Tester:
         for i in range(10):
             self.query.insert(100 + i, 93, 65, 43, 87)
             self.keys.append(100 + i)
-    
+
     def get_tester(self):
         key = 103
         page_index,record_index = self.table.get(key)
-        print("page_index = " + str(page_index) + 
+        print("page_index = " + str(page_index) +
         " record_index = " + str(record_index))
-    
+
     def ktr_tester(self):
         key = 103
         rid = self.table.key_to_rid(key)
-        rid = rid.decode("utf-8") 
+        rid = rid.decode("utf-8")
         print("RID = " + str(rid))
+
+    def table_column(self):
+        key = 3
+        column = self.table.get_column(key)
+        print("the whole column:\n")
+        print(column)
 
     def itk_tester(self):
         index = 3
@@ -95,6 +103,9 @@ class Table_Tester:
         self.get_tester()
         self.ktr_tester()
         self.itk_tester()
+
+        self.table_column()
+
         # put here for now, should be in query
         self.sum_tester()
 
