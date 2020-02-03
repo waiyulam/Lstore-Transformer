@@ -24,12 +24,12 @@ class Query:
 
     """
     # Insert a record with specified columns
+    # param *columns: list of integers      # contain list of (key,value) of record 
     """
 
     def insert(self, *columns):
         columns = list(columns)
-        encode_rid = ('b'+ str(self.table.num_records)).encode("utf-8")
-        rid = int.from_bytes(encode_rid, byteorder = "big")
+        rid = int.from_bytes(('b'+ str(self.table.num_records)).encode(), byteorder = "big")
         #rid = columns[self.table.key]
         schema_encoding = int('0' * self.table.num_columns)
         # INDIRECTION+RID+SCHEMA_ENCODING
@@ -57,11 +57,12 @@ class Query:
         indirect_byte = self.table.key_to_indirect(key)
         # get physical location in base page for this key 
         page_rid,rec_rid = self.table.get(key)
+        # Total record specified by key and columns : TA tester consider duplicated key? 
+        records = []
         if(int.from_bytes(indirect_byte,byteorder = 'big') != MAXINT):
             is_base = False 
             # get physical location for tail record 
             page_tid,rec_tid = self.table.get_tail(indirect_byte)
-
         res = []
         for query_col, val in enumerate(query_columns):
             # column is not selected 
@@ -80,7 +81,10 @@ class Query:
                     res.append(int.from_bytes(self.table.page_directory["Base"][query_col + NUM_METAS][page_rid].get(rec_rid), byteorder="big"))
                 else:
                     res.append(int.from_bytes(self.table.page_directory["Tail"][query_col + NUM_METAS][page_tid].get(rec_tid), byteorder="big"))
-        return res
+        
+        record = Record(self.table.key_to_rid(key).decode(),key,res)
+        records.append(record)
+        return records
 
     """
     # Update a record with specified key and columns
@@ -110,7 +114,7 @@ class Query:
                 else:
                     # compute new tail record indirection : the indirection of new tail record point backward to last tail record for this key
                     next_tail_indirection = int.from_bytes(base_indirection_id,byteorder='big')
-                    # compute tail columns : first deep copy the columns of the last tail record and update the new specified attribute 
+                    # compute tail columns : first copy the columns of the last tail record and update the new specified attribute 
                     next_tail_columns = self.table.get_tail_columns(base_indirection_id)
                     next_tail_columns[query_col] = val
                 # !!!: Need to do the encoding for lastest update
@@ -123,8 +127,8 @@ class Query:
                     page = self.table.page_directory["Tail"][col_id][-1]
                     # Verify tail Page is not full
                     if not page.has_capacity():
-                        self.table.page_directory["Base"][i].append(Page())
-                        page = self.table.page_directory["Base"][i][-1]
+                        self.table.page_directory["Tail"][col_id].append(Page())
+                        page = self.table.page_directory["Tail"][col_id][-1]
                     page.write(col_val)
                 # overwrite base page with new metadata 
                 self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].update(update_record_index, next_tid)
