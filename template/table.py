@@ -75,8 +75,8 @@ class Table:
         for i in range(len(tid_page)):
             for j in range(tid_page[i].num_records):
                 if (tid_page[i].get(j) == tid):
-                    for k in range(0,len(self.num_columns)):
-                        columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][i].get[j],byteorder='big'))
+                    for k in range(0,self.num_columns):
+                        columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][i].get(j),byteorder='big'))
                     break
         return columns
 
