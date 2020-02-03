@@ -36,6 +36,7 @@ class Table:
             self.page_directory["Base"][i] = [Page()]
             self.page_directory["Tail"][i] = [Page()]
 
+    # Get record physical locations
     def get(self,key):
         key_page = self.page_directory["Base"][3 + self.key]
         for i in range(len(key_page)):

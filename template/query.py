@@ -28,7 +28,8 @@ class Query:
 
     def insert(self, *columns):
         columns = list(columns)
-        rid = int.from_bytes(('b'+ str(self.table.num_records)).encode("utf-8"), byteorder = "big")
+        encode_rid = ('b'+ str(self.table.num_records)).encode("utf-8")
+        rid = int.from_bytes(encode_rid, byteorder = "big")
         #rid = columns[self.table.key]
         schema_encoding = int('0' * self.table.num_columns)
         # INDIRECTION+RID+SCHEMA_ENCODING
