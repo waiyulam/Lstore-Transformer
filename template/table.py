@@ -93,6 +93,10 @@ class Table:
         indirect_page = self.page_directory["Base"][INDIRECTION_COLUMN]
         return indirect_page[page_index].get(record_index) # in bytes
 
+    def key_to_index(self, key):
+        page_index, record_index = self.get(key)
+        index = page_index * MAX_RECORDS + record_index
+        return index
 
     def index_to_key(self, index):
         key_page = self.page_directory["Base"][3 + self.key]

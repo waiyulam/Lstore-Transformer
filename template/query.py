@@ -146,10 +146,10 @@ class Query:
     the ending key based on the provided tester.py
     """
     def sum(self, start_range, end_range, aggregate_column_index):
-        # end_range is the number of keys should be selected
         selected_keys = [] # selected keys in bytes
-        end_index = start_range + end_range
-        for index in range(start_range, end_index):
+        start_index = self.table.key_to_index(start_range)
+        end_index = self.table.key_to_index(end_range)
+        for index in range(start_index, end_index):
             selected_keys.append(int.from_bytes(self.table.index_to_key(index), byteorder = "big"))
         result = 0
         for key in selected_keys:
