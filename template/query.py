@@ -149,7 +149,7 @@ class Query:
         selected_keys = [] # selected keys in bytes
         start_index = self.table.key_to_index(start_range)
         end_index = self.table.key_to_index(end_range)
-        for index in range(start_index, end_index):
+        for index in range(start_index, end_index + 1):
             selected_keys.append(int.from_bytes(self.table.index_to_key(index), byteorder = "big"))
         result = 0
         for key in selected_keys:
