@@ -48,7 +48,7 @@ class Table:
         return record_page_index,record_index
     
     def key_to_rid(self, key):
-        page_index, record_index = self.get(self, key)
+        page_index, record_index = self.get(key)
         rid_page = self.page_directory["Base"][RID_COLUMN]
         return rid_page[page_index].get(record_index) # in bytes
 
