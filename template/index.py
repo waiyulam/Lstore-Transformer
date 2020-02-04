@@ -42,7 +42,7 @@ class Index:
 
     def locate_range(self, begin, end, column):
         if begin > end:
-            return list(self.indices[column].values(min=end, max=begin))
+            return list(self.indices[column].values(min=end, max=begin))[::-1] 
         else:
             return list(self.indices[column].values(min=begin, max=end))
 

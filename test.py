@@ -148,6 +148,8 @@ class Index_Tester:
         print(self.index.locate_range(103, 200, 0))
         print("record respect to 108 to 205")
         print(self.index.locate_range(108, 205, 0))
+        print("record respect to 205 to 108")
+        print(self.index.locate_range(205, 108, 0))
 
     def run_all(self):
         self.check_tree_structure()
