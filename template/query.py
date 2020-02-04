@@ -140,11 +140,6 @@ class Query:
     :param aggregate_columns: int   # Index of desired column to aggregate
     """
 
-    """
-    right now, the parameter is the starting index and the length of the 
-    selected keys, maybe we need the parameter to be the starting key and
-    the ending key based on the provided tester.py
-    """
     def sum(self, start_range, end_range, aggregate_column_index):
         selected_keys = [] # selected keys in bytes
         start_index = self.table.key_to_index(start_range)
@@ -155,5 +150,5 @@ class Query:
         for key in selected_keys:
             encoder = [0] * self.table.num_columns
             encoder[aggregate_column_index] = 1
-            result += (self.select(key, encoder))[aggregate_column_index]
+            result += (self.select(key, encoder))[0].columns[aggregate_column_index]
         return result
