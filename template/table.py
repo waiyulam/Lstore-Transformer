@@ -29,6 +29,7 @@ class Table:
         self.num_updates = 0
         self.num_records = 0
         self.__init_pages()
+        self.keys = []
 
     def __init_pages(self):
         self.page_directory = {

@@ -46,6 +46,7 @@ class Query:
                 page = self.table.page_directory["Base"][i][-1]
             page.write(value)
         self.table.num_records += 1
+        self.table.keys.append(columns[self.table.key])
 
     """
     # Read a record with specified key
@@ -137,11 +138,17 @@ class Query:
     """
 
     def sum(self, start_range, end_range, aggregate_column_index):
-        selected_keys = [] # selected keys in bytes
-        start_index = self.table.key_to_index(start_range)
-        end_index = self.table.key_to_index(end_range)
-        for index in range(start_index, end_index + 1):
-            selected_keys.append(int.from_bytes(self.table.index_to_key(index), byteorder = "big"))
+        keys = sorted(self.table.keys)
+        start_index = 0
+        end_index = 0
+        count = 0
+        for key in keys:
+            if key == start_range:
+                start_index = count
+            elif key == end_range:
+                end_index = count
+            count += 1
+        selected_keys = keys[start_index : end_index + 1]
         result = 0
         for key in selected_keys:
             encoder = [0] * self.table.num_columns

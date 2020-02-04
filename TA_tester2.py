@@ -45,14 +45,14 @@ for key in records:
         updated_columns[i] = None
 print(Fore.GREEN + 'Passed UPDATE test.')
 
-# keys = sorted(list(records.keys()))
-# for c in range(0, grades_table.num_columns):
-#     for i in range(0, 20):
-#         r = sorted(sample(range(0, len(keys)), 2))
-#         column_sum = sum(map(lambda key: records[key][c], keys[r[0]: r[1] + 1]))
-#         result = query.sum(keys[r[0]], keys[r[1]], c)
-#         if column_sum != result:
-#             print(Fore.RED + 'Sum error for keys', keys[r[0]], 'to', keys[r[1]], 'on column', c)
-#             print(Fore.RED + 'Should have been', column_sum, ' but returned ', result)
-
-# print(Fore.GREEN + 'Passed SUM test.')
+keys = sorted(list(records.keys()))
+for c in range(0, grades_table.num_columns):
+    for i in range(0, 20):
+        r = sorted(sample(range(0, len(keys)), 2))
+        column_sum = sum(map(lambda key: records[key][c], keys[r[0]: r[1] + 1]))
+        result = query.sum(keys[r[0]], keys[r[1]], c)
+        if column_sum != result:
+            print(Fore.RED + 'Sum error for keys', keys[r[0]], 'to', keys[r[1]], 'on column', c)
+            print(Fore.RED + 'Should have been', column_sum, ' but returned ', result)
+            exit()
+print(Fore.GREEN + 'Passed SUM test.')
