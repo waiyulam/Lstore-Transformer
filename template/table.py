@@ -83,23 +83,30 @@ class Table:
                     break
         return columns
 
-    # return the specific column of the table
-    def get_column(self, key):
+    # return the specific column of the table with respective rid column, optional argument for debugging
+    # 0 for INDIRECTION_COLUMN , 1 for RID_COLUMN, 2 for SCHEMA_ENCODING_COLUMN, 3 for nothing
+    def get_column(self, key, check_key):
         #print(self.page_directory["Base"][6][0].data)
-
+        encoding_page = self.page_directory["Base"][SCHEMA_ENCODING_COLUMN]
         indirection_page = self.page_directory["Base"][INDIRECTION_COLUMN]
         column = []
+        additional_column = []
         for i in range(len(indirection_page)):
             for j in range(indirection_page[i].num_records):
+                str_encode = str(encoding_page[i].get(j).decode())
                 indir_num = int.from_bytes(indirection_page[i].get(j), byteorder="big")
-                if indir_num != MAXINT:
+                if str_encode[key+3] == '1':
                     indir_String = indirection_page[i].get(j).decode()
                     str_num = str(indir_String).split('t')[1]
                     indir_int = int(str_num)
-                    column.append(self.page_directory["Tail"][key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
+                    column.append(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
+                    if check_key < 3:
+                        additional_column.append(self.page_directory["Tail"][check_key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
                 else:
-                    column.append(self.page_directory["Base"][key][i].get(j))
-        return column
+                    column.append(self.page_directory["Base"][key+3][i].get(j))
+                    if check_key < 3:
+                        additional_column.append(self.page_directory["Base"][check_key][i].get(j))
+        return column, additional_column
 
     def get_schema_encoding(self, key):
         key_page = self.page_directory["Base"][3 + self.key]
