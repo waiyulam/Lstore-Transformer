@@ -25,7 +25,7 @@ class Table:
         self.key = key
         self.num_columns = num_columns
         self.page_directory = {}
-        self.index = Index(self) # newly added
+        #self.index = Index(self) # newly added
         self.num_updates = 0
         self.num_records = 0
         self.__init_pages()
@@ -54,7 +54,7 @@ class Table:
                     break
         return record_page_index,record_index
 
-    # want to find physical location of tail record given tid 
+    # want to find physical location of tail record given tid
     # tid : bytesarray
     def get_tail(self,tid):
         tid_page = self.page_directory["Tail"][RID_COLUMN]
@@ -68,8 +68,8 @@ class Table:
                     break
         return record_page_index,record_index
 
-    # return the columns of attributes given tail record 
-    def get_tail_columns(self,tid):
+    # return the columns of attributes given tail record
+    def get_tail_columns(self, tid):
         tid_page = self.page_directory["Tail"][RID_COLUMN]
         record_index = 0
         record_page_index = 0
@@ -82,17 +82,50 @@ class Table:
                     break
         return columns
 
-    
+    # return the specific column of the table
+    def get_column(self, key):
+        #print(self.page_directory["Base"])
+
+        indirection_page = self.page_directory["Base"][INDIRECTION_COLUMN]
+        column = []
+        for i in range(len(indirection_page)):
+            for j in range(indirection_page[i].num_records):
+                indir_num = int.from_bytes(indirection_page[i].get(j), byteorder="big")
+                if indir_num != MAXINT:
+                    indir_String = indir_num.decode()
+                    indir_int = int(indir_String[1:])
+                    column.append(self.page_directory["Tail"][key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
+                else:
+                    column.append(self.page_directory["Base"][key][i].get(j))
+        return column
+
+    def get_schema_encoding(self, key):
+        key_page = self.page_directory["Base"][3 + self.key]
+        record_index = 0
+        record_page_index = 0
+        for i in range(len(key_page)):
+            for j in range(key_page[i].num_records):
+                if (key_page[i].get(j) == (key).to_bytes(8, byteorder='big')):
+                    record_index = j
+                    record_page_index = i
+                    break
+
+        return self.page_directory["Base"][SCHEMA_ENCODING_COLUMN][record_page_index].get(record_index)
+
     def key_to_rid(self, key):
         page_index, record_index = self.get(key)
         rid_page = self.page_directory["Base"][RID_COLUMN]
         return rid_page[page_index].get(record_index) # in bytes
-    
+
     def key_to_indirect(self,key):
         page_index, record_index = self.get(key)
         indirect_page = self.page_directory["Base"][INDIRECTION_COLUMN]
         return indirect_page[page_index].get(record_index) # in bytes
 
+    def key_to_index(self, key):
+        page_index, record_index = self.get(key)
+        index = page_index * MAX_RECORDS + record_index
+        return index
 
     def index_to_key(self, index):
         key_page = self.page_directory["Base"][3 + self.key]
