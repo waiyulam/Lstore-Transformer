@@ -60,6 +60,7 @@ class Query_Tester:
         self.test_insert()
         self.test_select1()
         self.test_update1()
+        self.test_select1()
 
 
 class Table_Tester:
