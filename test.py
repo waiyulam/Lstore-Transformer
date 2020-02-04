@@ -61,6 +61,7 @@ class Query_Tester:
         self.test_select1()
         self.test_update1()
 
+
 class Table_Tester:
     def __init__(self):
         self.db = Database()
