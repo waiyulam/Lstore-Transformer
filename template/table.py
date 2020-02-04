@@ -85,7 +85,7 @@ class Table:
 
     # return the specific column of the table
     def get_column(self, key):
-        #print(self.page_directory["Base"])
+        #print(self.page_directory["Base"][6][0].data)
 
         indirection_page = self.page_directory["Base"][INDIRECTION_COLUMN]
         column = []
@@ -93,8 +93,9 @@ class Table:
             for j in range(indirection_page[i].num_records):
                 indir_num = int.from_bytes(indirection_page[i].get(j), byteorder="big")
                 if indir_num != MAXINT:
-                    indir_String = indir_num.decode()
-                    indir_int = int(indir_String[1:])
+                    indir_String = indirection_page[i].get(j).decode()
+                    str_num = str(indir_String).split('t')[1]
+                    indir_int = int(str_num)
                     column.append(self.page_directory["Tail"][key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
                 else:
                     column.append(self.page_directory["Base"][key][i].get(j))

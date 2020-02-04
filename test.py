@@ -106,6 +106,7 @@ class Table_Tester:
         self.get_tester()
         self.ktr_tester()
         self.itk_tester()
+        self.table_column()
 
         self.table_column()
         # put here for now, should be in query
@@ -162,12 +163,12 @@ def main():
     print("\n*** TEST query ***\n")
     query_tester = Query_Tester()
     query_tester.run_all()
-    # print("\n*** TEST table ***\n")
-    # table_tester = Table_Tester()
-    # table_tester.run_all()
-    # print("\n*** TEST index ***\n")
-    # index_tester =  Index_Tester()
-    # index_tester.run_all()
+    print("\n*** TEST table ***\n")
+    table_tester = Table_Tester()
+    table_tester.run_all()
+    print("\n*** TEST index ***\n")
+    index_tester =  Index_Tester()
+    index_tester.run_all()
 
 if __name__ == "__main__":
     os.system("clear")

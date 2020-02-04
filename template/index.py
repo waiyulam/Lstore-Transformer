@@ -29,12 +29,23 @@ class Index:
             tree.update(col_dict)
             self.indices.append(tree)
 
-    """
-    # returns the location of all records with the given value on column "column", list of RIDs
-    """
+
+    # returns the location of all records with the given value on column "column", list of RID locations
 
     def locate(self, column, value):
-        return list(self.indices[column].values(min=value, max=value+1, excludemax=True))
+        rids = list(self.indices[column].values(min=value, max=value+1, excludemax=True))
+        # locations include page index and record index within the page
+        locs = []
+        if len(rids) > 0:
+            for rid in rids[0]:
+                str_rid = rid.decode()
+                if str_rid.find('b') != -1:
+                    str_num = str(str_rid).split('b')[1]
+                else:
+                    str_num = str(str_rid).split('t')[1]
+                loc_rid = int(str_num)
+                locs.append([loc_rid//MAX_RECORDS, loc_rid%MAX_RECORDS])
+        return locs
 
     """
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
@@ -42,7 +53,7 @@ class Index:
 
     def locate_range(self, begin, end, column):
         if begin > end:
-            return list(self.indices[column].values(min=end, max=begin))[::-1] 
+            return list(self.indices[column].values(min=end, max=begin))[::-1]
         else:
             return list(self.indices[column].values(min=begin, max=end))
 
