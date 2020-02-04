@@ -133,8 +133,14 @@ class Index_Tester:
                 # exlusively check the current value corresponding to how many record ID
                 print(list(indice.values(min=key, max = key+1, excludemax=True)))
 
+    def check_tree_locate(self):
+        column_selected = 2
+        print("record respect to 65")
+        print(self.index.locate(column_selected, 65))
+
     def run_all(self):
         self.check_tree_structure()
+        self.check_tree_locate()
 
 def main():
     print("\n*** TEST query ***\n")

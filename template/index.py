@@ -34,8 +34,7 @@ class Index:
     """
 
     def locate(self, column, value):
-        tree = self.indices[column]
-        return tree[value]
+        return list(self.indices[column].values(min=value, max=value+1, excludemax=True))
 
     """
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
