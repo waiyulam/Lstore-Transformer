@@ -20,6 +20,8 @@ class Query:
     """
 
     def delete(self, key):
+        page_index, record_index = self.get(key)
+        self.table.invalidate_rid(page_index, record_index)
         pass
 
     """

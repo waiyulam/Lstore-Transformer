@@ -135,5 +135,9 @@ class Table:
         record_index = index % MAX_RECORDS
         return key_page[page_index].get(record_index) # in bytes
 
+    def invalidate_rid(self, page_index, record_index):
+        rid_page = self.page_directory["Base"][RID_COLUMN]
+        rid_page[page_index][record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
+
     def __merge(self):
         pass

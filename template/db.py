@@ -20,7 +20,7 @@ class Database():
     """
     def create_table(self, name, num_columns, key):
         table = Table(name, num_columns, key)
-        # create a new table in database 
+        # create a new table in database
         self.tables.append(table)
         return table
 
@@ -28,4 +28,7 @@ class Database():
     # Deletes the specified table
     """
     def drop_table(self, name):
-        pass
+        if name in self.tables:
+            self.tables.remove(name)
+        else:
+            pass
