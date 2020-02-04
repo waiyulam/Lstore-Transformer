@@ -4,6 +4,8 @@ from template.table import Table
 from template.query import Query
 from template.db import Database
 from template.index import Index
+from random import choice, randrange
+
 
 class Query_Tester:
     def __init__(self):
@@ -87,9 +89,20 @@ class Table_Tester:
 
     def table_column(self):
         key = 1
-        column = self.table.get_column(key)
+        column = self.table.get_column(key, 3)
         print("the whole RID column:")
         print(column)
+
+    def table_column_update(self):
+        self.query.update(101, *[None, 97, None, None, None])
+        self.query.update(104, *[None, None, 100, 100, None])
+        for i in range(0, 5):
+            column, additional_column = self.table.get_column(i, 1)
+            print("the updated column with rids ", i, " is: ")
+            print(column)
+            print("corresponding rid: ")
+            print(additional_column)
+
 
     def itk_tester(self):
         index = 3
@@ -109,6 +122,7 @@ class Table_Tester:
         self.table_column()
 
         self.table_column()
+        self.table_column_update()
         # put here for now, should be in query
         # self.sum_tester()
 
