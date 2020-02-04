@@ -25,7 +25,7 @@ class Table:
         self.key = key
         self.num_columns = num_columns
         self.page_directory = {}
-        self.index = Index(self) # newly added
+        #self.index = Index(self) # newly added
         self.num_updates = 0
         self.num_records = 0
         self.__init_pages()
@@ -84,7 +84,8 @@ class Table:
 
     # return the specific column of the table
     def get_column(self, key):
-        #print(self.page_directory["Base"][6][0].data)
+        #print(self.page_directory["Base"])
+
         indirection_page = self.page_directory["Base"][INDIRECTION_COLUMN]
         column = []
         for i in range(len(indirection_page)):
@@ -93,9 +94,9 @@ class Table:
                 if indir_num != MAXINT:
                     indir_String = indir_num.decode()
                     indir_int = int(indir_String[1:])
-                    column.append(self.page_directory["Tail"][NUM_METAS+key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
+                    column.append(self.page_directory["Tail"][key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
                 else:
-                    column.append(self.page_directory["Base"][NUM_METAS+key][i].get(j))
+                    column.append(self.page_directory["Base"][key][i].get(j))
         return column
 
     def key_to_rid(self, key):

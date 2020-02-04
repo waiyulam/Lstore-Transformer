@@ -3,7 +3,7 @@ from template.page import Page
 from template.table import Table
 from template.query import Query
 from template.db import Database
-
+from template.index import Index
 
 class Query_Tester:
     def __init__(self):
@@ -84,9 +84,9 @@ class Table_Tester:
         print("RID = " + str(rid))
 
     def table_column(self):
-        key = 3
+        key = 1
         column = self.table.get_column(key)
-        print("the whole column:\n")
+        print("the whole RID column:")
         print(column)
 
     def itk_tester(self):
@@ -99,15 +99,42 @@ class Table_Tester:
         result = self.query.sum(0, 3, 2)
         print("score: = " + str(result))
 
+
     def run_all(self):
         self.get_tester()
         self.ktr_tester()
         self.itk_tester()
 
         self.table_column()
-
         # put here for now, should be in query
-        self.sum_tester()
+        # self.sum_tester()
+
+class Index_Tester:
+    def __init__(self):
+        #  print individual tree columns
+        self.db = Database()
+        self.table = self.db.create_table('Grades', 5, 0)
+        self.query = Query(self.table)
+        self.keys = []
+        for i in range(10):
+            self.query.insert(100 + i, 93, 65, 43, 87)
+            self.keys.append(100 + i)
+        self.index = Index(self.table)
+
+    def check_tree_structure(self):
+        indices = self.index.indices
+        # print out each tree information, corresponding to each column information
+        print(indices)
+        for i, indice in enumerate(indices):
+            print("column", i)
+            col_keys = indice.keys()
+            for key in col_keys:
+                print("key: ", key)
+                # exlusively check the current value corresponding to how many record ID
+                print(list(indice.values(min=key, max = key+1, excludemax=True)))
+
+    def run_all(self):
+        self.check_tree_structure()
 
 def main():
     print("\n*** TEST query ***\n")
@@ -116,6 +143,9 @@ def main():
     print("\n*** TEST table ***\n")
     table_tester = Table_Tester()
     table_tester.run_all()
+    print("\n*** TEST index ***\n")
+    index_tester =  Index_Tester()
+    index_tester.run_all()
 
 if __name__ == "__main__":
     os.system("clear")
