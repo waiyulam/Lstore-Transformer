@@ -99,6 +99,19 @@ class Table:
                     column.append(self.page_directory["Base"][key][i].get(j))
         return column
 
+    def get_schema_encoding(self, key):
+        key_page = self.page_directory["Base"][3 + self.key]
+        record_index = 0
+        record_page_index = 0
+        for i in range(len(key_page)):
+            for j in range(key_page[i].num_records):
+                if (key_page[i].get(j) == (key).to_bytes(8, byteorder='big')):
+                    record_index = j
+                    record_page_index = i
+                    break
+
+        return self.page_directory["Base"][SCHEMA_ENCODING_COLUMN][record_page_index].get(record_index)
+
     def key_to_rid(self, key):
         page_index, record_index = self.get(key)
         rid_page = self.page_directory["Base"][RID_COLUMN]

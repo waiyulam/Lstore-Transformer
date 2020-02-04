@@ -98,6 +98,7 @@ class Query:
             if val == None:
                 continue
             else:
+
                 # compute new tail record TID
                 next_tid = int.from_bytes(('t'+ str(self.table.num_updates)).encode(), byteorder = "big")
                 # the record is firstly updated
@@ -124,8 +125,10 @@ class Query:
                     if val != None:
                         temp[query_col] = 1
                 t2 = [str(i) for i in temp]
+                old_encoding = int.from_bytes(self.table.get_schema_encoding(key), byteorder='big')
+
                 # print(t2)
-                schema_encoding = int("".join(t2))
+                schema_encoding = int("".join(t2)) | old_encoding # bit-wise AND
                 # print("schema_encoding: ")
                 # print(schema_encoding)
                 # update new tail record
@@ -141,6 +144,7 @@ class Query:
                     page.write(col_val)
                 # overwrite base page with new metadata
                 self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].update(update_record_index, next_tid)
+                self.table.page_directory["Base"][SCHEMA_ENCODING_COLUMN][update_record_page_index].update(update_record_index, schema_encoding)
                 self.table.num_updates += 1
 
     """
