@@ -137,10 +137,22 @@ class Index_Tester:
         column_selected = 2
         print("record respect to 65")
         print(self.index.locate(column_selected, 65))
+        print("record respect to 43(supposed to be None)")
+        print(self.index.locate(column_selected, 43))
+
+    def check_tree_locate_range(self):
+        column_selected = 0
+        print("record respect to 100 to 102")
+        print(self.index.locate_range(100, 102, 0))
+        print("record respect to 103 to 109")
+        print(self.index.locate_range(103, 200, 0))
+        print("record respect to 108 to 205")
+        print(self.index.locate_range(108, 205, 0))
 
     def run_all(self):
         self.check_tree_structure()
         self.check_tree_locate()
+        self.check_tree_locate_range()
 
 def main():
     print("\n*** TEST query ***\n")

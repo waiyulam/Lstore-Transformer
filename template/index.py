@@ -1,8 +1,8 @@
 from template.config import *
+from BTrees.OOBTree import OOBTree
 """
 A data strucutre holding indices for various columns of a table. Key column should be indexd by default, other columns can be indexed through this object. Indices are usually B-Trees, but other data structures can be used as well.
 """
-from BTrees.OOBTree import OOBTree
 
 class Index:
 
@@ -41,7 +41,10 @@ class Index:
     """
 
     def locate_range(self, begin, end, column):
-        pass
+        if begin > end:
+            return list(self.indices[column].values(min=end, max=begin))
+        else:
+            return list(self.indices[column].values(min=begin, max=end))
 
     """
     # optional: Create index on specific column
