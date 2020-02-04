@@ -31,7 +31,7 @@ class Query:
         columns = list(columns)
         rid = int.from_bytes(('b'+ str(self.table.num_records)).encode(), byteorder = "big")
         #rid = columns[self.table.key]
-        schema_encoding = '0' * self.table.num_columns 
+        schema_encoding = '0' * self.table.num_columns
         schema_encoding = int.from_bytes(schema_encoding.encode(),byteorder = 'big')
         # INDIRECTION+RID+SCHEMA_ENCODING
         meta_data = [MAXINT,rid,schema_encoding]
@@ -55,42 +55,15 @@ class Query:
     def select(self, key, query_columns):
         # Get the indirection id given choice of primary keys
         indirect_byte = self.table.key_to_indirect(key)
-<<<<<<< HEAD
-        # get physical location in base page for this key
-        page_rid,rec_rid = self.table.get(key)
-        # Total record specified by key and columns : TA tester consider duplicated key?
-        records = []
-        if(int.from_bytes(indirect_byte,byteorder = 'big') != MAXINT):
-            is_base = False
-            # get physical location for tail record
-            page_tid,rec_tid = self.table.get_tail(indirect_byte)
-        res = []
-=======
         # Total record specified by key and columns : TA tester consider duplicated key?
         records, res = [], []
         schema_encoding = self.table.get_schema_encoding(key).decode()
         invalid_bits = 8 - self.table.num_columns
->>>>>>> a0308ddfe43743bb649b7c4eee136313a0fa24bd
         for query_col, val in enumerate(query_columns):
             # column is not selected
             if val != 1:
                 res.append(None)
                 continue
-<<<<<<< HEAD
-            # The column of this record is not updated
-            if is_base:
-                res.append(int.from_bytes(self.table.page_directory["Base"][query_col + NUM_METAS][page_rid].get(rec_rid), byteorder="big"))
-            # The column of this record has been updated : need to track tail record
-            else:
-                b = self.table.page_directory["Tail"][query_col+NUM_METAS][page_tid].get(rec_tid)
-                value = int.from_bytes(b,byteorder = 'big')
-                # such column(attributes) in this record is not updated
-                if (value == MAXINT):
-                    res.append(int.from_bytes(self.table.page_directory["Base"][query_col + NUM_METAS][page_rid].get(rec_rid), byteorder="big"))
-                else:
-                    res.append(int.from_bytes(self.table.page_directory["Tail"][query_col + NUM_METAS][page_tid].get(rec_tid), byteorder="big"))
-
-=======
             # print(schema_encoding)
             if schema_encoding[invalid_bits+query_col] == '1':
                 # print("Column {} Modified. Read from Tail".format(query_col))
@@ -103,7 +76,6 @@ class Query:
 
         # Uncommented to view result
         # print(res)
->>>>>>> a0308ddfe43743bb649b7c4eee136313a0fa24bd
         record = Record(self.table.key_to_rid(key).decode(),key,res)
         records.append(record)
         return records
@@ -139,17 +111,12 @@ class Query:
                     next_tail_columns = self.table.get_tail_columns(base_indirection_id)
                     next_tail_columns[query_col] = val
                 # !!!: Need to do the encoding for lastest update
-<<<<<<< HEAD
-                schema_encoding = int('0' * self.table.num_columns)
-                # update new tail record
-=======
                 temp_encoding = ["0"] * len(columns)
                 temp_encoding[query_col] = "1"
                 temp_encoding = int.from_bytes(("".join(temp_encoding)).encode(),byteorder = 'big')
                 old_encoding = int.from_bytes(self.table.get_schema_encoding(key),byteorder = 'big')
                 schema_encoding = temp_encoding|old_encoding
-                # update new tail record 
->>>>>>> a0308ddfe43743bb649b7c4eee136313a0fa24bd
+                # update new tail record
                 meta_data = [next_tail_indirection,next_tid,schema_encoding]
                 meta_data.extend(next_tail_columns)
                 tail_data = meta_data
@@ -170,14 +137,6 @@ class Query:
     :param aggregate_columns: int   # Index of desired column to aggregate
     """
 
-<<<<<<< HEAD
-    """
-    right now, the parameter is the starting index and the length of the
-    selected keys, maybe we need the parameter to be the starting key and
-    the ending key based on the provided tester.py
-    """
-=======
->>>>>>> a0308ddfe43743bb649b7c4eee136313a0fa24bd
     def sum(self, start_range, end_range, aggregate_column_index):
         keys = sorted(self.table.keys)
         start_index = 0
