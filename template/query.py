@@ -128,6 +128,8 @@ class Query:
                     if not page.has_capacity():
                         self.table.page_directory["Tail"][col_id].append(Page())
                         page = self.table.page_directory["Tail"][col_id][-1]
+                    print("column: ", col_id)
+                    print("value update on the tail: ", col_val)
                     page.write(col_val)
                 # overwrite base page with new metadata
                 self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].update(update_record_index, next_tid)

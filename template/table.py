@@ -94,12 +94,20 @@ class Table:
         for i in range(len(indirection_page)):
             for j in range(indirection_page[i].num_records):
                 str_encode = str(encoding_page[i].get(j).decode())
-                indir_num = int.from_bytes(indirection_page[i].get(j), byteorder="big")
                 if str_encode[key+3] == '1':
                     indir_String = indirection_page[i].get(j).decode()
+                    #print(indir_String)
                     str_num = str(indir_String).split('t')[1]
                     indir_int = int(str_num)
-                    column.append(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
+                    value = self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS)
+                    print(indir_int)
+                    for m in range(indirection_page[i].num_records):
+                        print()
+                        print(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(m))
+                    print(value)
+                    print("determinator: ", indir_int%MAX_RECORDS)
+                    print("value: ", int.from_bytes(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS), byteorder="big"))
+                    column.append(value)
                     if check_key < 3:
                         additional_column.append(self.page_directory["Tail"][check_key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
                 else:

@@ -155,8 +155,8 @@ class Index_Tester:
             self.keys.append(i+100)
             #list.remove(temp)
         self.query.update(102, *[101, None, None, None, None])
-        self.query.update(104, *[None, None, 100, 100, None])
-        self.query.update(105, *[None, None, 100, 100, None])
+        self.query.update(103, *[None, 200, None, 100, None])
+        self.query.update(104, *[None, 200, None, 100, None])
         self.index = Index(self.table)
 
     def check_tree_structure(self):
@@ -166,6 +166,7 @@ class Index_Tester:
         for i, indice in enumerate(indices):
             print("column", i)
             col_keys = indice.keys()
+            print("key list: ", list(col_keys))
             for key in col_keys:
                 print("key: ", key)
                 # exlusively check the current value corresponding to how many record ID
