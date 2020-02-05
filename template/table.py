@@ -101,7 +101,7 @@ class Table:
                     indir_int = int(str_num)
                     value = self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS)
                     # print(indir_int)
-                    for m in range(indirection_page[i].num_records):
+                    # for m in range(indirection_page[i].num_records):
                     #     print()
                     #     print(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(m))
                     # print(value)
