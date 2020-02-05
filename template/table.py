@@ -154,5 +154,9 @@ class Table:
         rid_page = self.page_directory["Base"][RID_COLUMN]
         rid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
 
+    def invalidate_tid(self, page_index, record_index):
+        rid_page = self.page_directory["Tail"][RID_COLUMN]
+        rid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
+
     def __merge(self):
         pass
