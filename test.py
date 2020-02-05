@@ -148,12 +148,15 @@ class Index_Tester:
         self.table = self.db.create_table('Grades', 5, 0)
         self.query = Query(self.table)
         self.keys = []
-        list = [0,1,2,3,4,5,6,7,8,9]
+        #list = [0,1,2,3,4,5,6,7,8,9]
         for i in range(10):
-            temp = choice(list)
-            self.query.insert(temp+100, 93, 65, 43, 87)
-            self.keys.append(temp+100)
-            list.remove(temp)
+            #temp = choice(list)
+            self.query.insert(i+100, 93, 65, 43, 87)
+            self.keys.append(i+100)
+            #list.remove(temp)
+        self.query.update(102, *[101, None, None, None, None])
+        self.query.update(104, *[None, None, 100, 100, None])
+        self.query.update(105, *[None, None, 100, 100, None])
         self.index = Index(self.table)
 
     def check_tree_structure(self):
@@ -169,11 +172,11 @@ class Index_Tester:
                 print(list(indice.values(min=key, max = key+1, excludemax=True)))
 
     def check_tree_locate(self):
-        column_selected = 2
-        print("record respect to 65")
-        print(self.index.locate(column_selected, 65))
-        print("record respect to 43(supposed to be None)")
+        column_selected = 3
+        print("record respect to 43")
         print(self.index.locate(column_selected, 43))
+        print("record respect to 65(supposed to be None)")
+        print(self.index.locate(column_selected, 65))
 
     def check_tree_locate_range(self):
         column_selected = 0
@@ -195,12 +198,12 @@ def main():
     print("\n*** TEST query ***\n")
     query_tester = Query_Tester()
     query_tester.run_all()
-#    print("\n*** TEST table ***\n")
-#    table_tester = Table_Tester()
-#    table_tester.run_all()
-    #print("\n*** TEST index ***\n")
-    #index_tester =  Index_Tester()
-    #index_tester.run_all()
+    print("\n*** TEST table ***\n")
+    table_tester = Table_Tester()
+    table_tester.run_all()
+    print("\n*** TEST index ***\n")
+    index_tester =  Index_Tester()
+    index_tester.run_all()
 
 if __name__ == "__main__":
     os.system("clear")

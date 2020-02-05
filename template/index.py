@@ -15,7 +15,7 @@ class Index:
         for col_index in range(self.table.num_columns):
             tree = OOBTree()
             # get the column based on column value
-            print("key given from class: ", 3+col_index)
+            #print("key given from class: ", 3+col_index)
             column, rid_col = self.table.get_column(col_index, RID_COLUMN)
             col_dict = {}
             # print(column)
