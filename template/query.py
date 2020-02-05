@@ -22,7 +22,29 @@ class Query:
     def delete(self, key):
         page_index, record_index = self.table.get(key)
         self.table.invalidate_rid(page_index, record_index)
-        pass
+        #TODO: go through the indirection and invalidate all the tale records rid
+        #TODO: need testing
+        indirect_page = self.table.page_directory["Base"][INDIRECTION_COLUMN]
+        indirect_tail_page = self.table.page_directory["Tail"][INDIRECTION_COLUMN]
+        byte_indirect = indirect_page[page_index].get(record_index)
+        if byte_indirect != MAXINT.to_bytes(8,byteorder = "big"):
+            string_indirect = byte_indirect.decode()
+            tail_page_index, tail_record_index = self.table.get_tail(byte_indirect)
+            self.table.invalidate_tid(tail_page_index, tail_record_index)
+            tail_byte_indirect = indirect_tail_page[tail_page_index].get(tail_record_index)
+            tail_string_indirect = tail_byte_indirect.decode()
+            while 'b' not in tail_string_indirect:
+                tail_page_index, tail_record_index = self.table.get_tail(tail_byte_indirect)
+                self.table.invalidate_tid(tail_page_index, tail_record_index)
+                tail_byte_indirect = indirect_tail_page[tail_page_index].get(tail_record_index)
+                if tail_byte_indirect != MAXINT.to_bytes(8,byteorder = "big"):
+                    tail_string_indirect = tail_byte_indirect.decode()
+                print(tail_string_indirect)
+            tail_page_index, tail_record_index = self.table.get_tail(tail_byte_indirect)
+            self.table.invalidate_tid(tail_page_index, tail_record_index)
+                #print(string_indirect)
+                #if 'b' in tail_string_indirect:
+                #    break;
 
     """
     # Insert a record with specified columns
