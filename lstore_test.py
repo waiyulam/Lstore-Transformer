@@ -165,8 +165,8 @@ class Index_Tester:
             self.keys.append(i+100)
             #list.remove(temp)
         self.query.update(102, *[101, None, None, None, None])
-        self.query.update(103, *[None, 200, None, 100, None])
-        self.query.update(104, *[None, 200, None, 100, None])
+        self.query.update(103, *[None, None, None, 100, None])
+        self.query.update(104, *[None, None, None, 100, None])
         self.index = Index(self.table)
 
     def check_tree_structure(self):
