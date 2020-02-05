@@ -25,7 +25,7 @@ class Index:
             # print(column)
             for i, byte_arr in enumerate(rid_col):
                 index_col = int.from_bytes(column[i], byteorder="big")
-                print(index_col)
+                # print(index_col)
                 if index_col in col_dict:
                     col_dict[index_col].append(byte_arr)
                 else:

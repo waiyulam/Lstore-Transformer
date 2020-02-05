@@ -100,13 +100,13 @@ class Table:
                     str_num = str(indir_String).split('t')[1]
                     indir_int = int(str_num)
                     value = self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS)
-                    print(indir_int)
+                    # print(indir_int)
                     for m in range(indirection_page[i].num_records):
-                        print()
-                        print(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(m))
-                    print(value)
-                    print("determinator: ", indir_int%MAX_RECORDS)
-                    print("value: ", int.from_bytes(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS), byteorder="big"))
+                    #     print()
+                    #     print(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(m))
+                    # print(value)
+                    # print("determinator: ", indir_int%MAX_RECORDS)
+                    # print("value: ", int.from_bytes(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS), byteorder="big"))
                     column.append(value)
                     if check_key < 3:
                         additional_column.append(self.page_directory["Tail"][check_key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
