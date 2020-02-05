@@ -14,12 +14,13 @@ class Index:
         # One index for each table. All our empty initially.
         self.table = table
         # self.indices = [None] *  self.table.num_columns
-        rid_col = self.table.get_column(RID_COLUMN)
+        # rid_col = self.table.get_column(RID_COLUMN)
         self.indices = []
         for col_index in range(self.table.num_columns):
             tree = OOBTree()
             # get the column based on column value
-            column = self.table.get_column(3+col_index)
+            #print("key given from class: ", 3+col_index)
+            column, rid_col = self.table.get_column(col_index, RID_COLUMN)
             col_dict = {}
             # print(column)
             for i, byte_arr in enumerate(rid_col):
@@ -33,8 +34,9 @@ class Index:
             tree.update(col_dict)
             self.indices.append(tree)
 
-
+    """
     # returns the location of all records with the given value on column "column", list of RID locations
+    """
 
     def locate(self, column, value):
         rids = list(self.indices[column].values(min=value, max=value+1, excludemax=True))

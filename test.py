@@ -4,12 +4,28 @@ from template.table import Table
 from template.query import Query
 from template.db import Database
 from template.index import Index
+from random import choice, randrange
+
 
 class Query_Tester:
     def __init__(self):
         self.db = Database()
         self.table = self.db.create_table("test", 6, 0)
         self.query = Query(self.table)
+
+    def test_delete(self):
+        self.query.delete(906659671)
+        keys = [906659671, 906659672, 906659673, 906659674, 906659675, 906659676, 906659677, 906659678, 906659679, 906659680]
+        for i in range(0, 10):
+            page_index,record_index = self.table.get(self.table.keys[i])
+            records = []
+            for j in range(len(self.table.page_directory["Base"])):
+                byte_value = self.table.page_directory["Base"][j][page_index].get(record_index)
+                if (j == 1):
+                    records.append(byte_value.decode())
+                else:
+                    records.append(int.from_bytes(byte_value, byteorder='big'))
+            print(records)
 
     def test_insert(self):
         keys = []
@@ -61,6 +77,7 @@ class Query_Tester:
         self.test_select1()
         self.test_update1()
         self.test_select1()
+        self.test_delete()
 
 
 class Table_Tester:
@@ -87,9 +104,20 @@ class Table_Tester:
 
     def table_column(self):
         key = 1
-        column = self.table.get_column(key)
+        column = self.table.get_column(key, 3)
         print("the whole RID column:")
         print(column)
+
+    def table_column_update(self):
+        self.query.update(101, *[None, 97, None, None, None])
+        self.query.update(104, *[None, None, 100, 100, None])
+        for i in range(0, 5):
+            column, additional_column = self.table.get_column(i, 1)
+            print("the updated column with rids ", i, " is: ")
+            print(column)
+            print("corresponding rid: ")
+            print(additional_column)
+
 
     def itk_tester(self):
         index = 3
@@ -109,6 +137,7 @@ class Table_Tester:
         self.table_column()
 
         self.table_column()
+        self.table_column_update()
         # put here for now, should be in query
         # self.sum_tester()
 
@@ -119,9 +148,15 @@ class Index_Tester:
         self.table = self.db.create_table('Grades', 5, 0)
         self.query = Query(self.table)
         self.keys = []
+        #list = [0,1,2,3,4,5,6,7,8,9]
         for i in range(10):
-            self.query.insert(100 + i, 93, 65, 43, 87)
-            self.keys.append(100 + i)
+            #temp = choice(list)
+            self.query.insert(i+100, 93, 65, 43, 87)
+            self.keys.append(i+100)
+            #list.remove(temp)
+        self.query.update(102, *[101, None, None, None, None])
+        self.query.update(103, *[None, 200, None, 100, None])
+        self.query.update(104, *[None, 200, None, 100, None])
         self.index = Index(self.table)
 
     def check_tree_structure(self):
@@ -131,17 +166,18 @@ class Index_Tester:
         for i, indice in enumerate(indices):
             print("column", i)
             col_keys = indice.keys()
+            print("key list: ", list(col_keys))
             for key in col_keys:
                 print("key: ", key)
                 # exlusively check the current value corresponding to how many record ID
                 print(list(indice.values(min=key, max = key+1, excludemax=True)))
 
     def check_tree_locate(self):
-        column_selected = 2
-        print("record respect to 65")
-        print(self.index.locate(column_selected, 65))
-        print("record respect to 43(supposed to be None)")
+        column_selected = 3
+        print("record respect to 43")
         print(self.index.locate(column_selected, 43))
+        print("record respect to 65(supposed to be None)")
+        print(self.index.locate(column_selected, 65))
 
     def check_tree_locate_range(self):
         column_selected = 0

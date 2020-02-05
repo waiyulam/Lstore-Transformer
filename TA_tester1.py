@@ -1,11 +1,7 @@
-<<<<<<< Updated upstream:TA_tester1.py
-from template.query import Query
-from template.db import Database
-=======
+
 from template.db import Database
 from template.query import Query
-from template.config import init
->>>>>>> Stashed changes:TA_tester.py
+from template.config import *
 
 from random import choice, randint, sample, seed
 from colorama import Fore, Back, Style
@@ -55,11 +51,7 @@ for key in records:
         if error:
             print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
         else:
-<<<<<<< Updated upstream:TA_tester1.py
-            print('update on', original, 'and', updated_columns, ':', record.columns) 
-=======
-            print('update on', original, 'and', updated_columns, ':', record)
->>>>>>> Stashed changes:TA_tester.py
+            print('update on', original, 'and', updated_columns, ':', record.columns)
         updated_columns[i] = None
 
 keys = sorted(list(records.keys()))

@@ -83,23 +83,38 @@ class Table:
                     break
         return columns
 
-    # return the specific column of the table
-    def get_column(self, key):
+    # return the specific column of the table with respective rid column, optional argument for debugging
+    # 0 for INDIRECTION_COLUMN , 1 for RID_COLUMN, 2 for SCHEMA_ENCODING_COLUMN, 3 for nothing
+    def get_column(self, key, check_key):
         #print(self.page_directory["Base"][6][0].data)
-
+        encoding_page = self.page_directory["Base"][SCHEMA_ENCODING_COLUMN]
         indirection_page = self.page_directory["Base"][INDIRECTION_COLUMN]
         column = []
+        additional_column = []
         for i in range(len(indirection_page)):
             for j in range(indirection_page[i].num_records):
-                indir_num = int.from_bytes(indirection_page[i].get(j), byteorder="big")
-                if indir_num != MAXINT:
+                str_encode = str(encoding_page[i].get(j).decode())
+                if str_encode[key+3] == '1':
                     indir_String = indirection_page[i].get(j).decode()
+                    #print(indir_String)
                     str_num = str(indir_String).split('t')[1]
                     indir_int = int(str_num)
-                    column.append(self.page_directory["Tail"][key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
+                    value = self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS)
+                    print(indir_int)
+                    for m in range(indirection_page[i].num_records):
+                        print()
+                        print(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(m))
+                    print(value)
+                    print("determinator: ", indir_int%MAX_RECORDS)
+                    print("value: ", int.from_bytes(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS), byteorder="big"))
+                    column.append(value)
+                    if check_key < 3:
+                        additional_column.append(self.page_directory["Tail"][check_key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
                 else:
-                    column.append(self.page_directory["Base"][key][i].get(j))
-        return column
+                    column.append(self.page_directory["Base"][key+3][i].get(j))
+                    if check_key < 3:
+                        additional_column.append(self.page_directory["Base"][check_key][i].get(j))
+        return column, additional_column
 
     # return the specific column of the table
     def get_old_column(self, key):
@@ -161,6 +176,14 @@ class Table:
         page_index = index // MAX_RECORDS
         record_index = index % MAX_RECORDS
         return key_page[page_index].get(record_index) # in bytes
+
+    def invalidate_rid(self, page_index, record_index):
+        rid_page = self.page_directory["Base"][RID_COLUMN]
+        rid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
+
+    def invalidate_tid(self, page_index, record_index):
+        rid_page = self.page_directory["Tail"][RID_COLUMN]
+        rid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
 
     def __merge(self):
         pass
