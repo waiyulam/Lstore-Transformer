@@ -13,6 +13,20 @@ class Query_Tester:
         self.table = self.db.create_table("test", 6, 0)
         self.query = Query(self.table)
 
+    def test_delete(self):
+        self.query.delete(906659671)
+        keys = [906659671, 906659672, 906659673, 906659674, 906659675, 906659676, 906659677, 906659678, 906659679, 906659680]
+        for i in range(0, 10):
+            page_index,record_index = self.table.get(self.table.keys[i])
+            records = []
+            for j in range(len(self.table.page_directory["Base"])):
+                byte_value = self.table.page_directory["Base"][j][page_index].get(record_index)
+                if (j == 1):
+                    records.append(byte_value.decode())
+                else:
+                    records.append(int.from_bytes(byte_value, byteorder='big'))
+            print(records)
+
     def test_insert(self):
         keys = []
         for i in range(0, 10):
@@ -63,6 +77,7 @@ class Query_Tester:
         self.test_select1()
         self.test_update1()
         self.test_select1()
+        self.test_delete()
 
 
 class Table_Tester:
@@ -133,9 +148,12 @@ class Index_Tester:
         self.table = self.db.create_table('Grades', 5, 0)
         self.query = Query(self.table)
         self.keys = []
+        list = [0,1,2,3,4,5,6,7,8,9]
         for i in range(10):
-            self.query.insert(100 + i, 93, 65, 43, 87)
-            self.keys.append(100 + i)
+            temp = choice(list)
+            self.query.insert(temp+100, 93, 65, 43, 87)
+            self.keys.append(temp+100)
+            list.remove(temp)
         self.index = Index(self.table)
 
     def check_tree_structure(self):
@@ -177,12 +195,12 @@ def main():
     print("\n*** TEST query ***\n")
     query_tester = Query_Tester()
     query_tester.run_all()
-    print("\n*** TEST table ***\n")
-    table_tester = Table_Tester()
-    table_tester.run_all()
-    print("\n*** TEST index ***\n")
-    index_tester =  Index_Tester()
-    index_tester.run_all()
+#    print("\n*** TEST table ***\n")
+#    table_tester = Table_Tester()
+#    table_tester.run_all()
+    #print("\n*** TEST index ***\n")
+    #index_tester =  Index_Tester()
+    #index_tester.run_all()
 
 if __name__ == "__main__":
     os.system("clear")
