@@ -196,12 +196,12 @@ class Index_Tester:
         self.check_tree_locate_range()
 
 def main():
-    print("\n*** TEST query ***\n")
-    query_tester = Query_Tester()
-    query_tester.run_all()
-    print("\n*** TEST table ***\n")
-    table_tester = Table_Tester()
-    table_tester.run_all()
+    # print("\n*** TEST query ***\n")
+    # query_tester = Query_Tester()
+    # query_tester.run_all()
+    # print("\n*** TEST table ***\n")
+    # table_tester = Table_Tester()
+    # table_tester.run_all()
     print("\n*** TEST index ***\n")
     index_tester =  Index_Tester()
     index_tester.run_all()
