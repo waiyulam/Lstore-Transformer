@@ -68,8 +68,29 @@ class Query_Tester:
 
 
     def test_sum(self):
-        for i in range(0, 5):
-            self.query.insert(906659671 + i, 93, 0, 0, 0, 0 )
+        for i in range(0, 10):
+            self.query.insert(100 + i, 100 * i, 0, 0, 0, 1000 * i)
+        
+        expected = sum([100 + i for i in range(0, 10)])
+        res = self.query.sum(100, 110, 0)
+        assert(res == expected)
+
+        expected = sum([100 * i for i in range(0, 10)])
+        res = self.query.sum(100, 110, 1)
+        assert(res == expected)
+
+        res = self.query.sum(100, 110, 2)
+        assert(res == 0)
+
+        res = self.query.sum(100, 110, 3)
+        assert(res == 0)
+
+        res = self.query.sum(100, 110, 4)
+        assert(res == 0)
+
+        expected = sum([1000 * i for i in range(0, 10)])
+        res = self.query.sum(100, 110, 5)
+        assert(res == expected)
 
 
     def run_all(self):
@@ -78,6 +99,7 @@ class Query_Tester:
         self.test_update1()
         self.test_select1()
         self.test_delete()
+        self.test_sum()
 
 
 class Table_Tester:
