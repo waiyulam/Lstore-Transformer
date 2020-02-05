@@ -39,7 +39,7 @@ class Query:
                 tail_byte_indirect = indirect_tail_page[tail_page_index].get(tail_record_index)
                 if tail_byte_indirect != MAXINT.to_bytes(8,byteorder = "big"):
                     tail_string_indirect = tail_byte_indirect.decode()
-                print(tail_string_indirect)
+                #print(tail_string_indirect)
             tail_page_index, tail_record_index = self.table.get_tail(tail_byte_indirect)
             self.table.invalidate_tid(tail_page_index, tail_record_index)
                 #print(string_indirect)
