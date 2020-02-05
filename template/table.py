@@ -101,6 +101,33 @@ class Table:
                     column.append(self.page_directory["Base"][key][i].get(j))
         return column
 
+    # return the specific column of the table
+    def get_old_column(self, key):
+        #print(self.page_directory["Base"][6][0].data)
+
+        indirection_page = self.page_directory["Base"][INDIRECTION_COLUMN]
+        schema_encoding_page = self.page_directory["Base"][SCHEMA_ENCODING_COLUMN]
+        column = []
+        for i in range(len(indirection_page)):
+            for j in range(indirection_page[i].num_records):
+                indir_num = int.from_bytes(indirection_page[i].get(j), byteorder="big")
+
+                # FIXME: Discuss schema_encoding usage here (Modifie by James for sum)
+                schema_encoding = list(schema_encoding_page[i].get(j).decode())
+                res =  []
+                for k, s in enumerate(schema_encoding):
+                    if s == "1" or s == "0":
+                        res.append(s)
+                res = ''.join(res).zfill(self.num_columns+3)
+                if indir_num != MAXINT and res[key] == '1':
+                    indir_String = indirection_page[i].get(j).decode()
+                    str_num = str(indir_String).split('t')[1]
+                    indir_int = int(str_num)
+                    column.append(self.page_directory["Tail"][key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
+                else:
+                    column.append(self.page_directory["Base"][key][i].get(j))
+        return column
+
     def get_schema_encoding(self, key):
         key_page = self.page_directory["Base"][3 + self.key]
         record_index = 0

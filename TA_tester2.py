@@ -4,6 +4,7 @@ from template.config import *
 
 from random import choice, randint, sample
 from colorama import Fore, Back, Style
+from time import time
 
 # Student Id and 4 grades
 db = Database()
@@ -12,13 +13,16 @@ query = Query(grades_table)
 
 records = {}
 
+start_time = time()
 for i in range(0, 1000):
     key = 92106429 + randint(0, 9000)
     while key in records:
         key = 92106429 + randint(0, 9000)
     records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
     query.insert(*records[key])
+print(Fore.GREEN + "Insert time: {}".format(time() - start_time))
 
+start_time = time()
 for key in records:
     record = query.select(key, [1, 1, 1, 1, 1])[0]
     for i, column in enumerate(record.columns):
@@ -26,7 +30,9 @@ for key in records:
             print(Fore.RED + 'Select error on key', key)
             exit()
 print(Fore.GREEN + 'Passed SELECT test.')
+print(Fore.GREEN + "Select time: {}".format(time() - start_time))
 
+start_time = time()
 for key in records:
     updated_columns = [None, None, None, None, None]
     for i in range(1, grades_table.num_columns):
@@ -44,7 +50,9 @@ for key in records:
                 exit()
         updated_columns[i] = None
 print(Fore.GREEN + 'Passed UPDATE test.')
+print(Fore.GREEN + "Select time: {}".format(time() - start_time))
 
+start_time = time()
 keys = sorted(list(records.keys()))
 for c in range(0, grades_table.num_columns):
     for i in range(0, 20):
@@ -56,3 +64,4 @@ for c in range(0, grades_table.num_columns):
             print(Fore.RED + 'Should have been', column_sum, ' but returned ', result)
             exit()
 print(Fore.GREEN + 'Passed SUM test.')
+print(Fore.GREEN + "Sum time: {}".format(time() - start_time))
