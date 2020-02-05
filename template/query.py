@@ -4,6 +4,9 @@ from template.page import Page
 from template.config import *
 from copy import copy
 import re
+from time import time
+from functools import reduce
+from operator import add
 
 class Query:
     """
@@ -12,6 +15,7 @@ class Query:
 
     def __init__(self, table):
         self.table = table
+        self.index = Index(self.table)
         pass
 
     """
@@ -150,13 +154,14 @@ class Query:
                     if not page.has_capacity():
                         self.table.page_directory["Tail"][col_id].append(Page())
                         page = self.table.page_directory["Tail"][col_id][-1]
-                    print("column: ", col_id)
-                    print("value update on the tail: ", col_val)
+                    # print("column: ", col_id)
+                    # print("value update on the tail: ", col_val)
                     page.write(col_val)
                 # overwrite base page with new metadata
                 self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].update(update_record_index, next_tid)
                 self.table.page_directory["Base"][SCHEMA_ENCODING_COLUMN][update_record_page_index].update(update_record_index, schema_encoding)
                 self.table.num_updates += 1
+            
     """
     :param start_range: int         # Start of the key range to aggregate
     :param end_range: int           # End of the key range to aggregate
@@ -164,20 +169,12 @@ class Query:
     """
 
     def sum(self, start_range, end_range, aggregate_column_index):
-        keys = sorted(self.table.keys)
-        start_index = 0
-        end_index = 0
-        count = 0
-        for key in keys:
-            if key == start_range:
-                start_index = count
-            elif key == end_range:
-                end_index = count
-            count += 1
-        selected_keys = keys[start_index : end_index + 1]
-        result = 0
-        for key in selected_keys:
-            encoder = [0] * self.table.num_columns
-            encoder[aggregate_column_index] = 1
-            result += (self.select(key, encoder))[0].columns[aggregate_column_index]
-        return result
+        start_time = time()
+        self.index.create_index(aggregate_column_index)
+        values = self.index.locate_range(start_range, end_range, aggregate_column_index)
+        if values != []:
+            values = sum(reduce(add, values))        
+        else:
+            values = 0
+        # print("Index Time: {}".format(time() - start_time))
+        return values

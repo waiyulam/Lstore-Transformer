@@ -5,7 +5,6 @@ from template.query import Query
 from template.db import Database
 from template.index import Index
 from random import choice, randrange
-from template.config import *
 
 
 class Query_Tester:
@@ -27,15 +26,6 @@ class Query_Tester:
                 else:
                     records.append(int.from_bytes(byte_value, byteorder='big'))
             print(records)
-        tail_records = []
-        for i in range(10):
-            byte_value = self.table.page_directory["Tail"][RID_COLUMN][0].get(i)
-            if(byte_value != MAXINT.to_bytes(8, byteorder="big")):
-                tail_records.append(int.from_bytes(byte_value, byteorder = "big"))
-            else:
-                tail_records.append(MAXINT)
-        print("tailrecords:")
-        print(tail_records)
 
     def test_insert(self):
         keys = []
@@ -68,7 +58,7 @@ class Query_Tester:
         self.query.update(906659671, *[None, 97, None, None, None, None])
         res = self.query.select(906659671, [1, 1, 1, 1, 1, 1])
         print(res)
-        self.query.update(906659672, *[None, None, None, 92, None, None])
+        self.query.update(906659671, *[None, None, None, 92, None, None])
         res = self.query.select(906659671, [1, 1, 1, 1, 1, 1])
         print(res)
         # for i in range(len(self.table.page_directory["Tail"][0])):
@@ -78,8 +68,29 @@ class Query_Tester:
 
 
     def test_sum(self):
-        for i in range(0, 5):
-            self.query.insert(906659671 + i, 93, 0, 0, 0, 0 )
+        for i in range(0, 10):
+            self.query.insert(100 + i, 100 * i, 0, 0, 0, 1000 * i)
+        
+        expected = sum([100 + i for i in range(0, 10)])
+        res = self.query.sum(100, 110, 0)
+        assert(res == expected)
+
+        expected = sum([100 * i for i in range(0, 10)])
+        res = self.query.sum(100, 110, 1)
+        assert(res == expected)
+
+        res = self.query.sum(100, 110, 2)
+        assert(res == 0)
+
+        res = self.query.sum(100, 110, 3)
+        assert(res == 0)
+
+        res = self.query.sum(100, 110, 4)
+        assert(res == 0)
+
+        expected = sum([1000 * i for i in range(0, 10)])
+        res = self.query.sum(100, 110, 5)
+        assert(res == expected)
 
 
     def run_all(self):
@@ -88,6 +99,7 @@ class Query_Tester:
         self.test_update1()
         self.test_select1()
         self.test_delete()
+        self.test_sum()
 
 
 class Table_Tester:
@@ -206,12 +218,12 @@ class Index_Tester:
         self.check_tree_locate_range()
 
 def main():
-    # print("\n*** TEST query ***\n")
-    # query_tester = Query_Tester()
-    # query_tester.run_all()
-    # print("\n*** TEST table ***\n")
-    # table_tester = Table_Tester()
-    # table_tester.run_all()
+    print("\n*** TEST query ***\n")
+    query_tester = Query_Tester()
+    query_tester.run_all()
+    print("\n*** TEST table ***\n")
+    table_tester = Table_Tester()
+    table_tester.run_all()
     print("\n*** TEST index ***\n")
     index_tester =  Index_Tester()
     index_tester.run_all()

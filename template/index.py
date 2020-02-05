@@ -1,5 +1,9 @@
 from template.config import *
 from BTrees.OOBTree import OOBTree
+ 
+from functools import reduce
+from operator import add
+import re
 """
 A data strucutre holding indices for various columns of a table. Key column should be indexd by default, other columns can be indexed through this object. Indices are usually B-Trees, but other data structures can be used as well.
 """
@@ -21,12 +25,12 @@ class Index:
             # print(column)
             for i, byte_arr in enumerate(rid_col):
                 index_col = int.from_bytes(column[i], byteorder="big")
-                #print(index_col)
+                # print(index_col)
                 if index_col in col_dict:
                     col_dict[index_col].append(byte_arr)
                 else:
                     col_dict[index_col] = [byte_arr]
-            #print(col_dict)
+            # print(col_dict)
             tree.update(col_dict)
             self.indices.append(tree)
 
@@ -58,13 +62,27 @@ class Index:
             return list(self.indices[column].values(min=end, max=begin))[::-1]
         else:
             return list(self.indices[column].values(min=begin, max=end))
-
+        
     """
     # optional: Create index on specific column
     """
 
     def create_index(self, column_number):
-        pass
+        tree = self.indices[column_number]
+        keys = self.table.get_old_column(3) # Primary Key
+        keys = [int.from_bytes(key, byteorder="big") for key in keys]
+        datas = self.table.get_old_column(column_number + 3)
+        datas = [int.from_bytes(data, byteorder="big") for data in datas]
+
+        col_dict = {}
+        for key, data in zip(keys, datas):
+            if key in col_dict.keys():
+                col_dict[key].append(data)
+            else:
+                col_dict[key] = [data]
+
+        tree.update(col_dict) # key (), value
+        self.indices[column_number] = tree
 
     """
     # optional: Drop index of specific column
