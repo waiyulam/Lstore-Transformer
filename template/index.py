@@ -69,9 +69,9 @@ class Index:
 
     def create_index(self, column_number):
         tree = self.indices[column_number]
-        keys = self.table.get_old_column(3) # Primary Key
+        keys = self.table.get_old_column(self.table.key) # Primary Key
         keys = [int.from_bytes(key, byteorder="big") for key in keys]
-        datas = self.table.get_old_column(column_number + 3)
+        datas = self.table.get_old_column(column_number)
         datas = [int.from_bytes(data, byteorder="big") for data in datas]
 
         col_dict = {}

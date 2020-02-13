@@ -7,6 +7,9 @@ import re
 from time import time
 from functools import reduce
 from operator import add
+# TODO: implement schema encoding as integer 
+# TODO: Change RID to all integer and set offset bit 
+# TODO : implement all queries by indexing 
 
 class Query:
     """
@@ -58,9 +61,7 @@ class Query:
     def insert(self, *columns):
         columns = list(columns)
         rid = int.from_bytes(('b'+ str(self.table.num_records)).encode(), byteorder = "big")
-        #rid = columns[self.table.key]
-        schema_encoding = '0' * self.table.num_columns
-        schema_encoding = int.from_bytes(schema_encoding.encode(),byteorder = 'big')
+        schema_encoding = 0
         # INDIRECTION+RID+SCHEMA_ENCODING
         meta_data = [MAXINT,rid,schema_encoding]
         columns = list(columns)
@@ -85,15 +86,14 @@ class Query:
         indirect_byte = self.table.key_to_indirect(key)
         # Total record specified by key and columns : TA tester consider duplicated key?
         records, res = [], []
-        schema_encoding = self.table.get_schema_encoding(key).decode()
-        invalid_bits = 8 - self.table.num_columns
+        schema_encoding = int.from_bytes(self.table.get_schema_encoding(key),byteorder="big")
         for query_col, val in enumerate(query_columns):
             # column is not selected
             if val != 1:
                 res.append(None)
                 continue
             # print(schema_encoding)
-            if schema_encoding[invalid_bits+query_col] == '1':
+            if (schema_encoding & (1<<query_col))>>query_col == 1:
                 # print("Column {} Modified. Read from Tail".format(query_col))
                 page_tid, rec_tid = self.table.get_tail(indirect_byte)
                 res.append(int.from_bytes(self.table.page_directory["Tail"][query_col + NUM_METAS][page_tid].get(rec_tid), byteorder="big"))
@@ -139,11 +139,9 @@ class Query:
                     next_tail_columns = self.table.get_tail_columns(base_indirection_id)
                     next_tail_columns[query_col] = val
                 # !!!: Need to do the encoding for lastest update
-                temp_encoding = ["0"] * len(columns)
-                temp_encoding[query_col] = "1"
-                temp_encoding = int.from_bytes(("".join(temp_encoding)).encode(),byteorder = 'big')
-                old_encoding = int.from_bytes(self.table.get_schema_encoding(key),byteorder = 'big')
-                schema_encoding = temp_encoding|old_encoding
+                old_encoding = int.from_bytes(self.table.get_schema_encoding(key),byteorder="big")
+                new_encoding = old_encoding | (1<<query_col)
+                schema_encoding = new_encoding
                 # update new tail record
                 meta_data = [next_tail_indirection,next_tid,schema_encoding]
                 meta_data.extend(next_tail_columns)

@@ -145,7 +145,6 @@ class Table_Tester:
         self.ktr_tester()
         self.itk_tester()
         self.table_column()
-
         self.table_column()
         self.table_column_update()
         # put here for now, should be in query

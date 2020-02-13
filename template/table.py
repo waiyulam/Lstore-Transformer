@@ -24,6 +24,7 @@ class Table:
         self.name = name
         self.key = key
         self.num_columns = num_columns
+        # TODO: invalid input -> columns > MAX_COLUMNS 
         self.page_directory = {}
         #self.index = Index(self) # newly added
         self.num_updates = 0
@@ -93,20 +94,12 @@ class Table:
         additional_column = []
         for i in range(len(indirection_page)):
             for j in range(indirection_page[i].num_records):
-                str_encode = str(encoding_page[i].get(j).decode())
-                if str_encode[key+3] == '1':
+                schema_encoding = int.from_bytes(encoding_page[i].get(j),byteorder="big")
+                if (schema_encoding & (1<<key))>>key == 1:
                     indir_String = indirection_page[i].get(j).decode()
-                    #print(indir_String)
                     str_num = str(indir_String).split('t')[1]
                     indir_int = int(str_num)
                     value = self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS)
-                    # print(indir_int)
-                    # for m in range(indirection_page[i].num_records):
-                    #     print()
-                    #     print(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(m))
-                    # print(value)
-                    # print("determinator: ", indir_int%MAX_RECORDS)
-                    # print("value: ", int.from_bytes(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS), byteorder="big"))
                     column.append(value)
                     if check_key < 3:
                         additional_column.append(self.page_directory["Tail"][check_key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
@@ -118,29 +111,20 @@ class Table:
 
     # return the specific column of the table
     def get_old_column(self, key):
-        #print(self.page_directory["Base"][6][0].data)
-
         indirection_page = self.page_directory["Base"][INDIRECTION_COLUMN]
         schema_encoding_page = self.page_directory["Base"][SCHEMA_ENCODING_COLUMN]
         column = []
         for i in range(len(indirection_page)):
             for j in range(indirection_page[i].num_records):
                 indir_num = int.from_bytes(indirection_page[i].get(j), byteorder="big")
-
-                # FIXME: Discuss schema_encoding usage here (Modifie by James for sum)
-                schema_encoding = list(schema_encoding_page[i].get(j).decode())
-                res =  []
-                for k, s in enumerate(schema_encoding):
-                    if s == "1" or s == "0":
-                        res.append(s)
-                res = ''.join(res).zfill(self.num_columns+3)
-                if indir_num != MAXINT and res[key] == '1':
+                schema_encoding = int.from_bytes(schema_encoding_page[i].get(j),byteorder="big")
+                if indir_num != MAXINT and (schema_encoding & (1<<key))>>key == 1:
                     indir_String = indirection_page[i].get(j).decode()
                     str_num = str(indir_String).split('t')[1]
                     indir_int = int(str_num)
-                    column.append(self.page_directory["Tail"][key][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
+                    column.append(self.page_directory["Tail"][key+3][indir_int//MAX_RECORDS].get(indir_int%MAX_RECORDS))
                 else:
-                    column.append(self.page_directory["Base"][key][i].get(j))
+                    column.append(self.page_directory["Base"][key+3][i].get(j))
         return column
 
     def get_schema_encoding(self, key):
