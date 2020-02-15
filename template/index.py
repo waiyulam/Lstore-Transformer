@@ -7,51 +7,36 @@ import re
 """
 A data strucutre holding indices for various columns of a table. Key column should be indexd by default, other columns can be indexed through this object. Indices are usually B-Trees, but other data structures can be used as well.
 """
+# The indexing is implemented as B Tree and for each node, we have (key, page pointer) mapping 
 
 class Index:
 
     def __init__(self, table):
-        # One index for each table. All our empty initially.
         self.table = table
-        # self.indices = [None] *  self.table.num_columns
-        # rid_col = self.table.get_column(RID_COLUMN)
-        self.indices = []
-        for col_index in range(self.table.num_columns):
-            tree = OOBTree()
-            # get the column based on column value
-            #print("key given from class: ", 3+col_index)
-            column, rid_col = self.table.get_column(col_index, RID_COLUMN)
-            col_dict = {}
-            # print(column)
-            for i, byte_arr in enumerate(rid_col):
-                index_col = int.from_bytes(column[i], byteorder="big")
-                # print(index_col)
-                if index_col in col_dict:
-                    col_dict[index_col].append(byte_arr)
-                else:
-                    col_dict[index_col] = [byte_arr]
-            # print(col_dict)
-            tree.update(col_dict)
-            self.indices.append(tree)
+        # One index for each column. All our empty initially.
+        self.indices = [None] *  table.num_columns
+        # Create default index for key columns 
+        tree = OOBTree()
+        self.indices[self.table.key] = tree 
+
+    """ insert new entry or collection of entires to index of specified column """ 
+    def update_index(self, key, pointer, column_number):
+        if not self.indices[column_number].has_key(key):
+            # add new key to tree 
+            self.indices[column_number].insert(key,pointer)
+        else:
+            self.indices[column_number][key] = pointer 
+
 
     """
     # returns the location of all records with the given value on column "column", list of RID locations
     """
 
     def locate(self, column, value):
-        rids = list(self.indices[column].values(min=value, max=value+1, excludemax=True))
-        # locations include page index and record index within the page
-        locs = []
-        if len(rids) > 0:
-            for rid in rids[0]:
-                str_rid = rid.decode()
-                if str_rid.find('b') != -1:
-                    str_num = str(str_rid).split('b')[1]
-                else:
-                    str_num = str(str_rid).split('t')[1]
-                loc_rid = int(str_num)
-                locs.append([loc_rid//MAX_RECORDS, loc_rid%MAX_RECORDS])
-        return locs
+        tree = self.indices[column]
+        if tree.has_key(value):
+            return tree[value]
+        return None
 
     """
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
@@ -68,7 +53,7 @@ class Index:
     """
 
     def create_index(self, column_number):
-        tree = self.indices[column_number]
+        tree = OOBTree()
         keys = self.table.get_old_column(self.table.key) # Primary Key
         keys = [int.from_bytes(key, byteorder="big") for key in keys]
         datas = self.table.get_old_column(column_number)

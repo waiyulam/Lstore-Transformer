@@ -30,7 +30,6 @@ class Table:
         self.num_updates = 0
         self.num_records = 0
         self.__init_pages()
-        self.keys = []
 
     def __init_pages(self):
         self.page_directory = {
@@ -76,12 +75,12 @@ class Table:
         record_index = 0
         record_page_index = 0
         columns = []
-        for i in range(len(tid_page)):
-            for j in range(tid_page[i].num_records):
-                if (tid_page[i].get(j) == tid):
-                    for k in range(0,self.num_columns):
-                        columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][i].get(j),byteorder='big'))
-                    break
+
+        tid_str = str(tid.decode()).split('t')[1]
+        tid = int(tid_str)
+        for k in range(0,self.num_columns):
+            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))
+                    
         return columns
 
     # return the specific column of the table with respective rid column, optional argument for debugging
@@ -145,10 +144,6 @@ class Table:
         rid_page = self.page_directory["Base"][RID_COLUMN]
         return rid_page[page_index].get(record_index) # in bytes
 
-    def key_to_indirect(self,key):
-        page_index, record_index = self.get(key)
-        indirect_page = self.page_directory["Base"][INDIRECTION_COLUMN]
-        return indirect_page[page_index].get(record_index) # in bytes
 
     def key_to_index(self, key):
         page_index, record_index = self.get(key)

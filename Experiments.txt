@@ -1,0 +1,6 @@
+# before using indexing to update and select 
+Inserting 1k records took:                       0.012498000000000002
+Selecting 1k records took:                       2.537942
+Updating 1k records took:                        20.591421999999998
+Aggregate 1k of <1000 record batch took:         19.725228
+Deleting 1k records took:                        6.947119999999998
