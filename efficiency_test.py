@@ -53,6 +53,6 @@ print("Aggregate 1k of <1000 record batch took:\t", agg_time_1 - agg_time_0)
 # Measuring Delete Performance
 delete_time_0 = process_time()
 for i in range(0, 1000):
-    query.delete(906659671 + i)
+    query.delete(92106429 + i)
 delete_time_1 = process_time()
 print("Deleting 1k records took:  \t\t\t", delete_time_1 - delete_time_0)

@@ -57,30 +57,22 @@ class Table:
 
     # want to find physical location of tail record given tid
     # tid : bytesarray
-    def get_tail(self,tid):
-        tid_page = self.page_directory["Tail"][RID_COLUMN]
+    def get_tail(self,tid,column):
         record_index = 0
         record_page_index = 0
-        for i in range(len(tid_page)):
-            for j in range(tid_page[i].num_records):
-                if (tid_page[i].get(j) == tid):
-                    record_index = j
-                    record_page_index = i
-                    break
-        return record_page_index,record_index
+        tid_str = str(tid.decode()).split('t')[1]
+        tid = int(tid_str)
+        return int.from_bytes(self.page_directory["Tail"][column+NUM_METAS][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big')
 
     # return the columns of attributes given tail record
     def get_tail_columns(self, tid):
-        tid_page = self.page_directory["Tail"][RID_COLUMN]
         record_index = 0
         record_page_index = 0
         columns = []
-
         tid_str = str(tid.decode()).split('t')[1]
         tid = int(tid_str)
         for k in range(0,self.num_columns):
-            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))
-                    
+            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))           
         return columns
 
     # return the specific column of the table with respective rid column, optional argument for debugging
@@ -126,43 +118,21 @@ class Table:
                     column.append(self.page_directory["Base"][key+3][i].get(j))
         return column
 
-    def get_schema_encoding(self, key):
-        key_page = self.page_directory["Base"][3 + self.key]
-        record_index = 0
-        record_page_index = 0
-        for i in range(len(key_page)):
-            for j in range(key_page[i].num_records):
-                if (key_page[i].get(j) == (key).to_bytes(8, byteorder='big')):
-                    record_index = j
-                    record_page_index = i
-                    break
-
-        return self.page_directory["Base"][SCHEMA_ENCODING_COLUMN][record_page_index].get(record_index)
-
-    def key_to_rid(self, key):
-        page_index, record_index = self.get(key)
-        rid_page = self.page_directory["Base"][RID_COLUMN]
-        return rid_page[page_index].get(record_index) # in bytes
-
-
-    def key_to_index(self, key):
-        page_index, record_index = self.get(key)
-        index = page_index * MAX_RECORDS + record_index
-        return index
-
-    def index_to_key(self, index):
-        key_page = self.page_directory["Base"][3 + self.key]
-        page_index = index // MAX_RECORDS
-        record_index = index % MAX_RECORDS
-        return key_page[page_index].get(record_index) # in bytes
-
-    def invalidate_rid(self, page_index, record_index):
+    """ invalidating the record : set bid and tids of this record to 0"""
+    def invalidate_record(self, page_index, record_index):
+        # invalidate the bid 
         rid_page = self.page_directory["Base"][RID_COLUMN]
         rid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
+        # invalidate the tid 
+        tid_page = self.page_directory["Tail"][RID_COLUMN]
+        byte_indirect = self.page_directory["Base"][INDIRECTION_COLUMN][page_index].get(record_index)
+        while ('b' not in byte_indirect.decode()) & (byte_indirect != MAXINT.to_bytes(8,byteorder = "big")):
+            tid_str = str(byte_indirect.decode()).split('t')[1]
+            tid = int(tid_str)
+            page_inde,record_index = tid//MAX_RECORDS,tid%MAX_RECORDS
+            tid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
+            byte_indirect = self.page_directory["Tail"][INDIRECTION_COLUMN][page_index].get(record_index)
 
-    def invalidate_tid(self, page_index, record_index):
-        rid_page = self.page_directory["Tail"][RID_COLUMN]
-        rid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
 
     def __merge(self):
         pass

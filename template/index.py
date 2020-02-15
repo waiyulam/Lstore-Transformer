@@ -53,21 +53,7 @@ class Index:
     """
 
     def create_index(self, column_number):
-        tree = OOBTree()
-        keys = self.table.get_old_column(self.table.key) # Primary Key
-        keys = [int.from_bytes(key, byteorder="big") for key in keys]
-        datas = self.table.get_old_column(column_number)
-        datas = [int.from_bytes(data, byteorder="big") for data in datas]
-
-        col_dict = {}
-        for key, data in zip(keys, datas):
-            if key in col_dict.keys():
-                col_dict[key].append(data)
-            else:
-                col_dict[key] = [data]
-
-        tree.update(col_dict) # key (), value
-        self.indices[column_number] = tree
+        pass
 
     """
     # optional: Drop index of specific column

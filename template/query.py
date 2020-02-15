@@ -59,26 +59,27 @@ class Query:
     def select(self, key, query_columns):
         # Get the indirection id given choice of primary keys
         page_pointer = self.index.locate(self.table.key,key)
-        indirect_page = self.table.page_directory["Base"][INDIRECTION_COLUMN]
-        indirect_byte =  indirect_page[page_pointer[0]].get(page_pointer[1]) # in bytes
+        # collect base meta datas of this record 
+        base_meta = []
+        for m in range(NUM_METAS):
+            meta_page = self.table.page_directory["Base"][m]
+            meta_value =  meta_page[page_pointer[0]].get(page_pointer[1]) # in bytes
+            base_meta.append(meta_value)
+        base_schema = int.from_bytes(base_meta[SCHEMA_ENCODING_COLUMN],byteorder = 'big')
+        base_indirection = base_meta[INDIRECTION_COLUMN]
         # Total record specified by key and columns : TA tester consider non-primary key 
         records, res = [], []
-        schema_encoding = int.from_bytes(self.table.get_schema_encoding(key),byteorder="big")
         for query_col, val in enumerate(query_columns):
             # column is not selected
             if val != 1:
                 res.append(None)
                 continue
             # print(schema_encoding)
-            if (schema_encoding & (1<<query_col))>>query_col == 1:
-                # print("Column {} Modified. Read from Tail".format(query_col))
-                page_tid, rec_tid = self.table.get_tail(indirect_byte)
-                res.append(int.from_bytes(self.table.page_directory["Tail"][query_col + NUM_METAS][page_tid].get(rec_tid), byteorder="big"))
+            if (base_schema & (1<<query_col))>>query_col == 1:
+                res.append(self.table.get_tail(base_indirection,query_col))
             else:
-                # print("Column {} Not Modified. Read from Head".format(query_col))
-                page_rid, rec_rid = self.table.get(key)
-                res.append(int.from_bytes(self.table.page_directory["Base"][query_col + NUM_METAS][page_rid].get(rec_rid), byteorder="big"))
-        record = Record(self.table.key_to_rid(key).decode(),key,res)
+                res.append(int.from_bytes(self.table.page_directory["Base"][query_col + NUM_METAS][page_pointer[0]].get(page_pointer[1]), byteorder="big"))
+        record = Record(self.table.page_directory["Base"][RID_COLUMN][page_pointer[0]].get(page_pointer[1]).decode(),key,res)
         records.append(record)
         return records
 
@@ -107,7 +108,6 @@ class Query:
                     next_tail_columns = []
                     next_tail_columns = [MAXINT for i in range(0,len(columns))]
                     next_tail_columns[query_col] = val
-
                 # the record has been updated
                 else:
                     # compute new tail record indirection : the indirection of new tail record point backward to last tail record for this key
@@ -115,7 +115,6 @@ class Query:
                     # compute tail columns : first copy the columns of the last tail record and update the new specified attribute
                     next_tail_columns = self.table.get_tail_columns(base_indirection_id)
                     next_tail_columns[query_col] = val
-                # !!!: Need to do the encoding for lastest update
                 encoding_page = self.table.page_directory["Base"][SCHEMA_ENCODING_COLUMN]
                 encoding_base =  encoding_page[update_record_page_index].get(update_record_index) # in bytes
                 old_encoding = int.from_bytes(encoding_base,byteorder="big")
@@ -146,14 +145,23 @@ class Query:
     """
 
     def sum(self, start_range, end_range, aggregate_column_index):
-        start_time = time()
-        self.index.create_index(aggregate_column_index)
-        values = self.index.locate_range(start_range, end_range, aggregate_column_index)
-        if values != []:
-            values = sum(reduce(add, values))        
-        else:
-            values = 0
-        # print("Index Time: {}".format(time() - start_time))
+        values = 0
+        # locate all keys in index 
+        locations = self.index.locate_range(start_range, end_range, self.table.key)
+        # Aggregating columns specified 
+        for i in range(len(locations)):
+            # collect base meta datas of this record 
+            base_meta = []
+            for m in range(NUM_METAS):
+                meta_page = self.table.page_directory["Base"][m]
+                meta_value =  meta_page[locations[i][0]].get(locations[i][1]) # in bytes
+                base_meta.append(meta_value)
+            base_schema = int.from_bytes(base_meta[SCHEMA_ENCODING_COLUMN],byteorder = 'big')
+            base_indirection = base_meta[INDIRECTION_COLUMN]
+            if (base_schema & (1<<aggregate_column_index))>>aggregate_column_index == 1:
+                values  += self.table.get_tail(base_indirection,aggregate_column_index)
+            else:
+                values += int.from_bytes(self.table.page_directory["Base"][aggregate_column_index + NUM_METAS][locations[i][0]].get(locations[i][1]), byteorder="big")
         return values
 
     """
@@ -161,29 +169,8 @@ class Query:
     # Read a record with specified RID
     """
 
+    # TODO : merging -> remove all invalidate record and key in index 
     def delete(self, key):
-        page_index, record_index = self.table.get(key)
-        self.table.invalidate_rid(page_index, record_index)
-        #TODO: go through the indirection and invalidate all the tale records rid
-        #TODO: need testing
-        indirect_page = self.table.page_directory["Base"][INDIRECTION_COLUMN]
-        indirect_tail_page = self.table.page_directory["Tail"][INDIRECTION_COLUMN]
-        byte_indirect = indirect_page[page_index].get(record_index)
-        if byte_indirect != MAXINT.to_bytes(8,byteorder = "big"):
-            string_indirect = byte_indirect.decode()
-            tail_page_index, tail_record_index = self.table.get_tail(byte_indirect)
-            self.table.invalidate_tid(tail_page_index, tail_record_index)
-            tail_byte_indirect = indirect_tail_page[tail_page_index].get(tail_record_index)
-            tail_string_indirect = tail_byte_indirect.decode()
-            while 'b' not in tail_string_indirect:
-                tail_page_index, tail_record_index = self.table.get_tail(tail_byte_indirect)
-                self.table.invalidate_tid(tail_page_index, tail_record_index)
-                tail_byte_indirect = indirect_tail_page[tail_page_index].get(tail_record_index)
-                if tail_byte_indirect != MAXINT.to_bytes(8,byteorder = "big"):
-                    tail_string_indirect = tail_byte_indirect.decode()
-                #print(tail_string_indirect)
-            tail_page_index, tail_record_index = self.table.get_tail(tail_byte_indirect)
-            self.table.invalidate_tid(tail_page_index, tail_record_index)
-                #print(string_indirect)
-                #if 'b' in tail_string_indirect:
-                #    break;
+        page_pointer = self.index.locate(self.table.key,key)
+        page_index, record_index = page_pointer[0],page_pointer[1]
+        self.table.invalidate_record(page_index, record_index)
