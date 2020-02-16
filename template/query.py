@@ -7,10 +7,10 @@ import re
 from time import time
 from functools import reduce
 from operator import add
-# TODO: Change RID to all integer and set offset bit 
-# TODO : implement all queries by indexing 
-# TODO : implement page range 
-# TODO : support non primary key selection 
+# TODO: Change RID to all integer and set offset bit
+# TODO : implement all queries by indexing
+# TODO : implement page range
+# TODO : support non primary key selection
 
 
 class Query:
@@ -22,7 +22,7 @@ class Query:
         self.table = table
         self.index = Index(self.table)
         self.page_pointer = [0,0]
-        pass 
+        pass
 
     """
     # Insert a record with specified columns
@@ -38,14 +38,8 @@ class Query:
         columns = list(columns)
         meta_data.extend(columns)
         base_data = meta_data
-        for i, value in enumerate(base_data):
-            page = self.table.page_directory["Base"][i][-1]
-            # Verify Page is not full
-            if not page.has_capacity():
-                self.table.page_directory["Base"][i].append(Page())
-                page = self.table.page_directory["Base"][i][-1]
-            page.write(value)
-        # update indices 
+        self.table.page_write(base_data, 'Base')
+        # update indices
         self.page_pointer = [self.table.num_records//MAX_RECORDS,self.table.num_records%MAX_RECORDS]
         self.index.update_index(columns[self.table.key],self.page_pointer,self.table.key)
         # record_page_index,record_index = self.table.get(columns[self.table.key])
@@ -59,7 +53,7 @@ class Query:
     def select(self, key, query_columns):
         # Get the indirection id given choice of primary keys
         page_pointer = self.index.locate(self.table.key,key)
-        # collect base meta datas of this record 
+        # collect base meta datas of this record
         base_meta = []
         for m in range(NUM_METAS):
             meta_page = self.table.page_directory["Base"][m]
@@ -67,7 +61,7 @@ class Query:
             base_meta.append(meta_value)
         base_schema = int.from_bytes(base_meta[SCHEMA_ENCODING_COLUMN],byteorder = 'big')
         base_indirection = base_meta[INDIRECTION_COLUMN]
-        # Total record specified by key and columns : TA tester consider non-primary key 
+        # Total record specified by key and columns : TA tester consider non-primary key
         records, res = [], []
         for query_col, val in enumerate(query_columns):
             # column is not selected
@@ -124,20 +118,13 @@ class Query:
                 meta_data = [next_tail_indirection,next_tid,schema_encoding]
                 meta_data.extend(next_tail_columns)
                 tail_data = meta_data
-                for col_id, col_val in enumerate(tail_data):
-                    page = self.table.page_directory["Tail"][col_id][-1]
-                    # Verify tail Page is not full
-                    if not page.has_capacity():
-                        self.table.page_directory["Tail"][col_id].append(Page())
-                        page = self.table.page_directory["Tail"][col_id][-1]
-                    # print("column: ", col_id)
-                    # print("value update on the tail: ", col_val)
-                    page.write(col_val)
+                self.table.page_write(tail_data, 'Tail')
+
                 # overwrite base page with new metadata
                 self.table.page_directory["Base"][INDIRECTION_COLUMN][update_record_page_index].update(update_record_index, next_tid)
                 self.table.page_directory["Base"][SCHEMA_ENCODING_COLUMN][update_record_page_index].update(update_record_index, schema_encoding)
                 self.table.num_updates += 1
-            
+
     """
     :param start_range: int         # Start of the key range to aggregate
     :param end_range: int           # End of the key range to aggregate
@@ -146,11 +133,11 @@ class Query:
 
     def sum(self, start_range, end_range, aggregate_column_index):
         values = 0
-        # locate all keys in index 
+        # locate all keys in index
         locations = self.index.locate_range(start_range, end_range, self.table.key)
-        # Aggregating columns specified 
+        # Aggregating columns specified
         for i in range(len(locations)):
-            # collect base meta datas of this record 
+            # collect base meta datas of this record
             base_meta = []
             for m in range(NUM_METAS):
                 meta_page = self.table.page_directory["Base"][m]
@@ -169,7 +156,7 @@ class Query:
     # Read a record with specified RID
     """
 
-    # TODO : merging -> remove all invalidate record and key in index 
+    # TODO : merging -> remove all invalidate record and key in index
     def delete(self, key):
         page_pointer = self.index.locate(self.table.key,key)
         page_index, record_index = page_pointer[0],page_pointer[1]

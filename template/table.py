@@ -24,11 +24,12 @@ class Table:
         self.name = name
         self.key = key
         self.num_columns = num_columns
-        # TODO: invalid input -> columns > MAX_COLUMNS 
+        # TODO: invalid input -> columns > MAX_COLUMNS
         self.page_directory = {}
         #self.index = Index(self) # newly added
         self.num_updates = 0
         self.num_records = 0
+        self.num_ranges = 0
         self.__init_pages()
 
     def __init_pages(self):
@@ -37,14 +38,14 @@ class Table:
             "Tail": {}
         }
 
-        for i in range(self.num_columns + 3):
+        for i in range(self.num_columns + NUM_METAS):
             self.page_directory["Base"][i] = [Page()]
             self.page_directory["Tail"][i] = [Page()]
 
     # Get record physical locations
     # !!! assume key exists
     def get(self,key):
-        key_page = self.page_directory["Base"][3 + self.key]
+        key_page = self.page_directory["Base"][NUM_METAS + self.key]
         record_index = 0
         record_page_index = 0
         for i in range(len(key_page)):
@@ -72,16 +73,16 @@ class Table:
         tid_str = str(tid.decode()).split('t')[1]
         tid = int(tid_str)
         for k in range(0,self.num_columns):
-            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))           
+            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))
         return columns
 
 
     """ invalidating the record : set bid and tids of this record to 0"""
     def invalidate_record(self, page_index, record_index):
-        # invalidate the bid 
+        # invalidate the bid
         rid_page = self.page_directory["Base"][RID_COLUMN]
         rid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
-        # invalidate the tid 
+        # invalidate the tid
         tid_page = self.page_directory["Tail"][RID_COLUMN]
         byte_indirect = self.page_directory["Base"][INDIRECTION_COLUMN][page_index].get(record_index)
         while ('b' not in byte_indirect.decode()) & (byte_indirect != MAXINT.to_bytes(8,byteorder = "big")):
@@ -90,6 +91,15 @@ class Table:
             page_inde,record_index = tid//MAX_RECORDS,tid%MAX_RECORDS
             tid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
             byte_indirect = self.page_directory["Tail"][INDIRECTION_COLUMN][page_index].get(record_index)
+
+    def page_write(self, data, type):
+        for i, value in enumerate(data):
+            page = self.page_directory[type][i][-1]
+            # Verify Page is not full
+            if not page.has_capacity():
+                self.page_directory[type][i].append(Page())
+                page = self.page_directory[type][i][-1]
+            page.write(value)
 
 
     def __merge(self):
