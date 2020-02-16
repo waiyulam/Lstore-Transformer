@@ -43,23 +43,6 @@ class Table:
             self.page_directory["Base"][i] = [Page_Range()]
             self.page_directory["Tail"][i] = [[Page()]]
 
-    # Get record physical locations
-    # !!! assume key exists
-    def get(self,key):
-        key_page_range = self.page_directory["Base"][NUM_METAS + self.key]
-        range_index = 0
-        record_index = 0
-        record_page_index = 0
-        for i in range(len(key_page_range)):
-            for j in range(len(key_page_range[i])):
-                for k in range(key_page_range[i][j].num_records):
-                    if (key_page_range[i][j].get(k) == (key).to_bytes(8, byteorder='big')):
-                        range_index = i
-                        record_page_index = j
-                        record_index = k
-                        break
-        return range_index,record_page_index,record_index
-
     # want to find physical location of tail record given tid
     # tid : bytesarray
     def get_tail(self,tid,column, range_index):
