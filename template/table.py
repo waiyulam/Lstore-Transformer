@@ -2,6 +2,7 @@ from template.page import *
 from template.config import *
 from template.index import Index
 from time import time
+from template.page_range import *
 
 class Record:
 
@@ -29,7 +30,6 @@ class Table:
         #self.index = Index(self) # newly added
         self.num_updates = 0
         self.num_records = 0
-        self.num_ranges = 0
         self.__init_pages()
 
     def __init_pages(self):
@@ -38,67 +38,103 @@ class Table:
             "Tail": {}
         }
 
+        # reinitialize the page directory to accomodate the page range
         for i in range(self.num_columns + NUM_METAS):
-            self.page_directory["Base"][i] = [Page()]
-            self.page_directory["Tail"][i] = [Page()]
+            self.page_directory["Base"][i] = [Page_Range()]
+            self.page_directory["Tail"][i] = [[Page()]]
 
     # Get record physical locations
     # !!! assume key exists
     def get(self,key):
-        key_page = self.page_directory["Base"][NUM_METAS + self.key]
+        key_page_range = self.page_directory["Base"][NUM_METAS + self.key]
+        range_index = 0
         record_index = 0
         record_page_index = 0
-        for i in range(len(key_page)):
-            for j in range(key_page[i].num_records):
-                if (key_page[i].get(j) == (key).to_bytes(8, byteorder='big')):
-                    record_index = j
-                    record_page_index = i
-                    break
-        return record_page_index,record_index
+        for i in range(len(key_page_range)):
+            for j in range(len(key_page_range[i])):
+                for k in range(key_page_range[i][j].num_records):
+                    if (key_page_range[i][j].get(k) == (key).to_bytes(8, byteorder='big')):
+                        range_index = i
+                        record_page_index = j
+                        record_index = k
+                        break
+        return range_index,record_page_index,record_index
 
     # want to find physical location of tail record given tid
     # tid : bytesarray
-    def get_tail(self,tid,column):
-        record_index = 0
-        record_page_index = 0
+    def get_tail(self,tid,column, range_index):
         tid_str = str(tid.decode()).split('t')[1]
         tid = int(tid_str)
-        return int.from_bytes(self.page_directory["Tail"][column+NUM_METAS][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big')
+        pre_updates = 0
+        for i in range(range_index):
+            for page in self.page_directory["Tail"][column+NUM_METAS][i]:
+                pre_updates += page.num_records
+        in_range_tid = tid - pre_updates
+        return int.from_bytes(self.page_directory["Tail"][column+NUM_METAS][range_index][in_range_tid//MAX_RECORDS].get(in_range_tid%MAX_RECORDS),byteorder='big')
 
     # return the columns of attributes given tail record
-    def get_tail_columns(self, tid):
-        record_index = 0
-        record_page_index = 0
+    def get_tail_columns(self, tid, range_index):
         columns = []
         tid_str = str(tid.decode()).split('t')[1]
         tid = int(tid_str)
+        pre_updates = 0
+        for i in range(range_index):
+            for page in self.page_directory["Tail"][column+NUM_METAS][i]:
+                pre_updates += page.num_records
+        in_range_tid = tid - pre_updates
         for k in range(0,self.num_columns):
-            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))
+            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][range_index][in_range_tid//MAX_RECORDS].get(in_range_tid%MAX_RECORDS),byteorder='big'))
         return columns
 
 
     """ invalidating the record : set bid and tids of this record to 0"""
-    def invalidate_record(self, page_index, record_index):
+    def invalidate_record(self, page_range, page_index, record_index):
         # invalidate the bid
-        rid_page = self.page_directory["Base"][RID_COLUMN]
-        rid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
+        rid_page_range = self.page_directory["Base"][RID_COLUMN]
+        rid_page_range[page_range].get_value(page_index).data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
         # invalidate the tid
-        tid_page = self.page_directory["Tail"][RID_COLUMN]
-        byte_indirect = self.page_directory["Base"][INDIRECTION_COLUMN][page_index].get(record_index)
+        tid_page_range = self.page_directory["Tail"][RID_COLUMN]
+        byte_indirect = self.page_directory["Base"][INDIRECTION_COLUMN][page_range].get_value(page_index).get(record_index)
         while ('b' not in byte_indirect.decode()) & (byte_indirect != MAXINT.to_bytes(8,byteorder = "big")):
             tid_str = str(byte_indirect.decode()).split('t')[1]
             tid = int(tid_str)
-            page_inde,record_index = tid//MAX_RECORDS,tid%MAX_RECORDS
-            tid_page[page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
-            byte_indirect = self.page_directory["Tail"][INDIRECTION_COLUMN][page_index].get(record_index)
+            pre_updates = 0
+            for i in range(page_range):
+                for page in self.page_directory["Tail"][column+NUM_METAS][i]:
+                    pre_updates += page.num_records
+            in_range_tid = tid - pre_updates
+            page_index,record_index = in_range_tid//MAX_RECORDS,in_range_tid%MAX_RECORDS
+            tid_page_range[page_range][page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
+            byte_indirect = self.page_directory["Tail"][INDIRECTION_COLUMN][page_range][page_index].get(record_index)
 
-    def page_write(self, data, type):
+    def base_page_write(self, data):
         for i, value in enumerate(data):
-            page = self.page_directory[type][i][-1]
+            # latest page range
+            page_range = self.page_directory["Base"][i][-1]
+            page = page_range.page_range[page_range.curr_page]
+            # check if page range currently at the end of the page
+            if not page_range.end_page():
+                # Page range not at the end. Verify if Page is full
+                if not page.has_capacity():
+                    # need a new page allocation
+                    self.page_directory["Base"][i][-1].write()
+                    page = self.page_directory["Base"][i][-1].get()
+            else:
+                # Page range at the end, check if page is full
+                if not page.has_capacity():
+                    # Page is full, need a new page range and new page
+                    self.page_directory["Base"][i].append(Page_Range())
+                    self.page_directory["Tail"][i].append([Page()])
+                    page = self.page_directory["Base"][i][-1].get()
+            page.write(value)
+
+    def tail_page_write(self, data, range_index):
+        for i, value in enumerate(data):
+            page = self.page_directory['Tail'][i][range_index][-1]
             # Verify Page is not full
             if not page.has_capacity():
-                self.page_directory[type][i].append(Page())
-                page = self.page_directory[type][i][-1]
+                self.page_directory['Tail'][i][range_index].append(Page())
+                page = self.page_directory['Tail'][i][range_index][-1]
             page.write(value)
 
 
