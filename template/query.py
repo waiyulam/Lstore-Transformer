@@ -95,7 +95,10 @@ class Query:
                 continue
             else:
                 # compute new tail record TID
-                next_tid = int.from_bytes(('t'+ str(self.table.num_updates)).encode(), byteorder = "big")
+                tmp_indice = len(self.table.page_directory["Tail"][INDIRECTION_COLUMN][update_range_index])-1
+                page_records = self.table.page_directory["Tail"][INDIRECTION_COLUMN][update_range_index][tmp_indice].num_records
+                total_records = page_records + tmp_indice*MAX_RECORDS
+                next_tid = int.from_bytes(('t'+ str(total_records)).encode(), byteorder = "big")
                 # the record is firstly updated
                 if (int.from_bytes(base_indirection_id,byteorder='big') == MAXINT):
                     # compute new tail record indirection :  the indirection of tail record point backward to base pages

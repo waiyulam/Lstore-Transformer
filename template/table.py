@@ -48,25 +48,15 @@ class Table:
     def get_tail(self,tid,column, range_index):
         tid_str = str(tid.decode()).split('t')[1]
         tid = int(tid_str)
-        pre_updates = 0
-        for i in range(range_index):
-            for page in self.page_directory["Tail"][column+NUM_METAS][i]:
-                pre_updates += page.num_records
-        in_range_tid = tid - pre_updates
-        return int.from_bytes(self.page_directory["Tail"][column+NUM_METAS][range_index][in_range_tid//MAX_RECORDS].get(in_range_tid%MAX_RECORDS),byteorder='big')
+        return int.from_bytes(self.page_directory["Tail"][column+NUM_METAS][range_index][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big')
 
     # return the columns of attributes given tail record
     def get_tail_columns(self, tid, range_index):
         columns = []
         tid_str = str(tid.decode()).split('t')[1]
         tid = int(tid_str)
-        pre_updates = 0
-        for i in range(range_index):
-            for page in self.page_directory["Tail"][column+NUM_METAS][i]:
-                pre_updates += page.num_records
-        in_range_tid = tid - pre_updates
         for k in range(0,self.num_columns):
-            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][range_index][in_range_tid//MAX_RECORDS].get(in_range_tid%MAX_RECORDS),byteorder='big'))
+            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][range_index][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))
         return columns
 
 
@@ -102,7 +92,6 @@ class Table:
                     # need a new page allocation
                     self.page_directory["Base"][i][-1].write()
                     page = self.page_directory["Base"][i][-1].get()
-            else:
                 # Page range at the end, check if page is full
                 if not page.has_capacity():
                     # Page is full, need a new page range and new page
