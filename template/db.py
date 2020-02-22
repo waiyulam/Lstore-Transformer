@@ -1,12 +1,16 @@
 from template.table import Table
+import os
 
 class Database():
 
     def __init__(self):
         self.tables = []
+        self.page_buffer_pool = []
         pass
 
     def open(self, path):
+        for page in os.listdir(path):
+            self.page_buffer_pool.append(page)
         pass
 
     def close(self):
