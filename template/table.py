@@ -46,21 +46,21 @@ class Table:
     # want to find physical location of tail record given tid
     # tid : bytesarray
     def get_tail(self,tid,column, range_index):
-        tid_str = str(tid.decode()).split('t')[1]
-        tid = int(tid_str)
+    #    tid_str = str(tid.decode()).split('t')[1]
+    #    tid = int(tid_str)
         return int.from_bytes(self.page_directory["Tail"][column+NUM_METAS][range_index][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big')
 
     # return the columns of attributes given tail record
     def get_tail_columns(self, tid, range_index):
         columns = []
-        tid_str = str(tid.decode()).split('t')[1]
-        tid = int(tid_str)
+    #    tid_str = str(tid.decode()).split('t')[1]
+    #    tid = int(tid_str)
         for k in range(0,self.num_columns):
             columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][range_index][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))
         return columns
 
 
-    """ invalidating the record : set bid and tids of this record to 0"""
+    """ invalidating the record : set bid and tids of this record to 0
     def invalidate_record(self, page_range, page_index, record_index):
         # invalidate the bid
         rid_page_range = self.page_directory["Base"][RID_COLUMN]
@@ -79,7 +79,7 @@ class Table:
             page_index,record_index = in_range_tid//MAX_RECORDS,in_range_tid%MAX_RECORDS
             tid_page_range[page_range][page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
             byte_indirect = self.page_directory["Tail"][INDIRECTION_COLUMN][page_range][page_index].get(record_index)
-
+"""
     def base_page_write(self, data):
         for i, value in enumerate(data):
             # latest page range
@@ -138,4 +138,3 @@ Needs special dealings with deleted records
 """
 
     def __merge(self, page_range_index, col_index):
-        
