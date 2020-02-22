@@ -136,6 +136,6 @@ Hashable -> track whether the latest version of a record is seen or not
 Apply update until the base range is seen, skipping any intermediate updates
 
 Needs special dealings with deleted records
-"""
 
     def __merge(self, page_range_index, col_index):
+        """

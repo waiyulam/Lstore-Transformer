@@ -15,6 +15,9 @@ from operator import add
 # TODO : support non primary key selection
 
 
+def datetime_to_int(dt):
+    return int(dt.strftime("%Y%m%d%H%M%S"))
+
 class Query:
     """
     # Creates a Query object that can perform different queries on the specified table
@@ -39,7 +42,7 @@ class Query:
         schema_encoding = 0
         base_rid = rid
         #rid = int.from_bytes(('b'+ str(self.table.num_records)).encode(), byteorder = "big")
-        starttime = datetime.datetime.now()
+        starttime = datetime_to_int(datetime.datetime.now())
         lastupdatetime = 0
         updatetime = 0
         # INDIRECTION+RID+SCHEMA_ENCODING
@@ -84,7 +87,7 @@ class Query:
                 res.append(self.table.get_tail(base_indirection,query_col, page_pointer[0]))
             else:
                 res.append(int.from_bytes(self.table.page_directory["Base"][query_col + NUM_METAS][page_pointer[0]].get_value(page_pointer[1]).get(page_pointer[2]), byteorder="big"))
-        record = Record(self.table.page_directory["Base"][RID_COLUMN][page_pointer[0]].get_value(page_pointer[1]).get(page_pointer[2]).decode(),key,res)
+        record = Record(self.table.page_directory["Base"][RID_COLUMN][page_pointer[0]].get_value(page_pointer[1]).get(page_pointer[2]),key,res)
         records.append(record)
         return records
 
@@ -123,18 +126,19 @@ class Query:
                     # compute new tail record indirection : the indirection of new tail record point backward to last tail record for this key
                     next_tail_indirection = int.from_bytes(base_indirection_id,byteorder='big')
                     # compute tail columns : first copy the columns of the last tail record and update the new specified attribute
-                    next_tail_columns = self.table.get_tail_columns(base_indirection_id, update_range_index)
+                    base_indirection = int.from_bytes(base_indirection_id, byteorder = 'big')
+                    next_tail_columns = self.table.get_tail_columns(base_indirection, update_range_index)
                     next_tail_columns[query_col] = val
                 encoding_page_range = self.table.page_directory["Base"][SCHEMA_ENCODING_COLUMN]
                 encoding_base =  encoding_page_range[update_range_index].get_value(update_record_page_index).get(update_record_index) # in bytes
                 old_encoding = int.from_bytes(encoding_base,byteorder="big")
                 new_encoding = old_encoding | (1<<query_col)
                 schema_encoding = new_encoding
-                starttime = datetime.datetime.now()
+                starttime = datetime_to_int(datetime.datetime.now())
                 lastupdatetime = 0
                 updatetime = 0
                 # update new tail record
-                meta_data = [next_tail_indirection,next_tid,schema_encoding,base_rid,starttime,lastupdatetime,updatetime]
+                meta_data = [next_tail_indirection,next_tid,schema_encoding,base_id,starttime,lastupdatetime,updatetime]
                 meta_data.extend(next_tail_columns)
                 tail_data = meta_data
                 self.table.tail_page_write(tail_data, update_range_index)
@@ -165,7 +169,7 @@ class Query:
             base_schema = int.from_bytes(base_meta[SCHEMA_ENCODING_COLUMN],byteorder = 'big')
             base_indirection = base_meta[INDIRECTION_COLUMN]
             if (base_schema & (1<<aggregate_column_index))>>aggregate_column_index == 1:
-                values  += self.table.get_tail(base_indirection,aggregate_column_index, locations[i][0])
+                values  += self.table.get_tail(int.from_bytes(base_indirection, byteorder = 'big'),aggregate_column_index, locations[i][0])
             else:
                 values += int.from_bytes(self.table.page_directory["Base"][aggregate_column_index + NUM_METAS][locations[i][0]].get_value(locations[i][1]).get(locations[i][2]), byteorder="big")
         return values
@@ -181,6 +185,7 @@ class Query:
         null_value = []
         for i in range(self.table.num_columns):
             null_value.append(MAXINT)
+
         #page_range, page_index, record_index = page_pointer[0],page_pointer[1], page_pointer[2]
-        self.update(key, null_value)
+        self.update(key, *null_value)
     #    self.table.invalidate_record(page_range, page_index, record_index)
