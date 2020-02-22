@@ -63,6 +63,7 @@ class Table:
     """ invalidating the record : set bid and tids of this record to 0"""
     def invalidate_record(self, page_range, page_index, record_index):
         # invalidate the bid
+        #for i in range()
         rid_page_range = self.page_directory["Base"][RID_COLUMN]
         rid_page_range[page_range].get_value(page_index).data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
         # invalidate the tid

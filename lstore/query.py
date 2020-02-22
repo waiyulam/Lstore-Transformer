@@ -6,6 +6,7 @@ from lstore.page_range import *
 from copy import copy
 import re
 from time import time
+import datetime
 from functools import reduce
 from operator import add
 # TODO: Change RID to all integer and set offset bit
@@ -33,10 +34,16 @@ class Query:
 
     def insert(self, *columns):
         columns = list(columns)
-        rid = int.from_bytes(('b'+ str(self.table.num_records)).encode(), byteorder = "big")
+        rid = self.table.num_records
+        #rid = int.from_bytes(('b'+ str(self.table.num_records)).encode(), byteorder = "big")
         schema_encoding = 0
+        base_rid = rid
+        #rid = int.from_bytes(('b'+ str(self.table.num_records)).encode(), byteorder = "big")
+        starttime = datetime.datetime.now()
+        lastupdatetime = 0
+        updatetime = 0
         # INDIRECTION+RID+SCHEMA_ENCODING
-        meta_data = [MAXINT,rid,schema_encoding]
+        meta_data = [MAXINT,rid,schema_encoding,base_rid,starttime,lastupdatetime,updatetime]
         columns = list(columns)
         meta_data.extend(columns)
         base_data = meta_data
@@ -90,6 +97,7 @@ class Query:
         update_range_index, update_record_page_index,update_record_index = page_pointer[0],page_pointer[1], page_pointer[2]
         indirect_page_range = self.table.page_directory["Base"][INDIRECTION_COLUMN]
         base_indirection_id =  indirect_page_range[update_range_index].get_value(update_record_page_index).get(update_record_index) # in bytes
+        base_id = int.from_bytes(self.table.page_directory["Base"][RID_COLUMN][update_range_index].get_value(update_record_page_index).get(update_record_index), byteorder = "big")
         for query_col,val in enumerate(columns):
             if val == None:
                 continue
@@ -98,7 +106,8 @@ class Query:
                 tmp_indice = len(self.table.page_directory["Tail"][INDIRECTION_COLUMN][update_range_index])-1
                 page_records = self.table.page_directory["Tail"][INDIRECTION_COLUMN][update_range_index][tmp_indice].num_records
                 total_records = page_records + tmp_indice*MAX_RECORDS
-                next_tid = int.from_bytes(('t'+ str(total_records)).encode(), byteorder = "big")
+                next_tid = total_records
+                #next_tid = int.from_bytes(('t'+ str(total_records)).encode(), byteorder = "big")
                 # the record is firstly updated
                 if (int.from_bytes(base_indirection_id,byteorder='big') == MAXINT):
                     # compute new tail record indirection :  the indirection of tail record point backward to base pages
@@ -121,8 +130,11 @@ class Query:
                 old_encoding = int.from_bytes(encoding_base,byteorder="big")
                 new_encoding = old_encoding | (1<<query_col)
                 schema_encoding = new_encoding
+                starttime = datetime.datetime.now()
+                lastupdatetime = 0
+                updatetime = 0
                 # update new tail record
-                meta_data = [next_tail_indirection,next_tid,schema_encoding]
+                meta_data = [next_tail_indirection,next_tid,schema_encoding,base_rid,starttime,lastupdatetime,updatetime]
                 meta_data.extend(next_tail_columns)
                 tail_data = meta_data
                 self.table.tail_page_write(tail_data, update_range_index)
@@ -165,6 +177,10 @@ class Query:
 
     # TODO : merging -> remove all invalidate record and key in index
     def delete(self, key):
-        page_pointer = self.index.locate(self.table.key,key)
-        page_range, page_index, record_index = page_pointer[0],page_pointer[1], page_pointer[2]
-        self.table.invalidate_record(page_range, page_index, record_index)
+        #page_pointer = self.index.locate(self.table.key,key)
+        null_value = []
+        for i in range(self.table.num_columns):
+            null_value.append(MAXINT)
+        #page_range, page_index, record_index = page_pointer[0],page_pointer[1], page_pointer[2]
+        self.update(key, null_value)
+    #    self.table.invalidate_record(page_range, page_index, record_index)
