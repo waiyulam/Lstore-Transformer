@@ -1,8 +1,8 @@
-from template.page import *
-from template.config import *
-from template.index import Index
+from lstore.page import *
+from lstore.config import *
+from lstore.index import Index
 from time import time
-from template.page_range import *
+from lstore.page_range import *
 
 class Record:
 
@@ -109,33 +109,6 @@ class Table:
                 page = self.page_directory['Tail'][i][range_index][-1]
             page.write(value)
 
-"""
-Step1: Identify committed tail records in tail pages:
-Select a set of consecutive fully committed tail records (or pages) since the
-last marge within each update range
 
-Step2: Load the corresponding outdated base pages:
-For a selected set of committed tail records, load the corresponding outdated
-base pages for the given update range (limit the load to only outdated columns)
-
-optimization:
-Avoid to load sub-ranges of records that have not yet changed since the last
-merge.
-
-Step3: Consolidate the base and tail pages:
-For every updated column, the merge process will read a outdated base pages and
-applies a set of recent committed updates from the tail pages and writes out m
-new pages.
-
-First the BaseRID column of the committed tail pages are scanned in reverse
-order to find the list of the latest version of every updated record.
-
-Hashable -> track whether the latest version of a record is seen or not
-
-Apply update until the base range is seen, skipping any intermediate updates
-
-Needs special dealings with deleted records
-"""
-
-    def __merge(self, page_range_index, col_index):
-        
+    def __merge(self):
+        pass

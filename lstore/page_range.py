@@ -1,5 +1,5 @@
-from template.config import *
-from template.page import *
+from lstore.config import *
+from lstore.page import *
 
 class Page_Range:
 
@@ -8,7 +8,6 @@ class Page_Range:
         temp = [None] * PAGE_RANGE
         temp[0] = Page()
         self.page_range = temp
-        self.TPS = 0
 
     def end_page(self):
         return self.curr_page == PAGE_RANGE

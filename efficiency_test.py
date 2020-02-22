@@ -1,6 +1,6 @@
-from template.db import Database
-from template.query import Query
-from template.config import *
+from lstore.db import Database
+from lstore.query import Query
+from lstore.config import *
 from random import choice, randint, sample
 from time import process_time
 

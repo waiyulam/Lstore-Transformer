@@ -1,11 +1,11 @@
 import os
-from template.page import Page
-from template.table import Table
-from template.query import Query
-from template.db import Database
-from template.index import Index
+from lstore.page import Page
+from lstore.table import Table
+from lstore.query import Query
+from lstore.db import Database
+from lstore.index import Index
 from random import choice, randrange
-from template.config import *
+from lstore.config import *
 
 
 class Query_Tester:
