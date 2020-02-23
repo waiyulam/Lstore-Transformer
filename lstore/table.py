@@ -15,6 +15,13 @@ class Record:
         self.columns = columns
         self.indirection = None
 
+# this is for milestone 3, while each page range in each column will be a thread
+# class range_Thread(threading.Thread):
+#     def _init_(self, pg_range):
+#         threading.Thread._init_(self)
+#         self.pg_range = pg_range
+#     def run(self):
+#         pass
 
 
 class Table:
@@ -145,7 +152,6 @@ Needs special dealings with deleted records
 #         if range_records > MERGE_TRIGGER:
 #             cur_thread = range_Thread(cur_page_range)
 #             self.queueThreads.put(cur_thread)
-
     def __merge(self):
         # initialize threads for all the page ranges in every column
         # if their number of updates within page range is above 2 physical page
