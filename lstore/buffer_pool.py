@@ -41,7 +41,7 @@ class BufferPool():
     def initial_path(self, path):
         self.path = path
 
-    def add_meta(self, uid):
+    def add_page(self, uid):
         self.page_directories[uid] = None
 
     def is_full(self):
