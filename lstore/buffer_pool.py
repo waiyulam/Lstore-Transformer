@@ -27,77 +27,86 @@ def write_page(page, page_path):
     f.close()
 
 
-class BufferPool():
+class BufferPool:
+    size = BUFFER_POOL_SIZE
+    path = None
+
+    # active pages loaded in bufferpool
+    page_directories = {}
+
+    # Pop the least freuqently used page
+    tstamp_directories = {}
+
     def __init__(self):
-        self.size = BUFFER_POOL_SIZE
-        self.path = None
+        print("Init BufferPool. Do Nothing ...")
+        pass
 
-        # active pages loaded in bufferpool
-        self.page_directories = {}
+    @classmethod
+    def initial_path(cls, path):
+        cls.path = path
 
-        # Pop the least freuqently used page
-        self.tstamp_directories = {}
+    @classmethod
+    def add_page(cls, uid):
+        cls.page_directories[uid] = None
 
-    def initial_path(self, path):
-        self.path = path
+    @classmethod
+    def is_full(cls):
+        return len(cls.tstamp_directories) >= cls.size
 
-    def add_page(self, uid):
-        self.page_directories[uid] = None
+    @classmethod
+    def is_page_in_buffer(cls, uid):
+        return cls.page_directories[uid] is None
 
-    def is_full(self):
-        return len(self.tstamp_directories) >= self.size
-
-    def is_page_in_buffer(self, uid):
-        return self.page_directories[uid] is None
-
-    def uid_to_path(self, uid):
+    @classmethod
+    def uid_to_path(cls, uid):
         """
         Convert uid to path
         uid: tuple(table_name, base_tail, column_id, page_range_id, page_id)
         """
         t_name, base_tail, column_id, page_range_id, page_id = uid
-        path = os.path.join(self.path, t_name, base_tail, column_id,
+        path = os.path.join(cls.path, t_name, base_tail, column_id,
                             page_range_id, str(page_id) + ".pkl")
         return path
 
-    def get_page(self, t_name, base_tail, column_id, page_range_id, page_id):
+    @classmethod
+    def get_page(cls, t_name, base_tail, column_id, page_range_id, page_id):
         uid = tuple(t_name, base_tail, column_id, page_range_id, page_id)
-        page_path = self.uid_to_path(uid)
+        page_path = cls.uid_to_path(uid)
 
         # Page not loaded in buffer, load from disk
-        if self.is_page_in_buffer(uid):
+        if cls.is_page_in_buffer(uid):
             # No Space in bufferbool, write LRU page to disk
-            if self.is_full():
+            if cls.is_full():
                 # Pop least recently used page in cache
-                sorted_uids = sorted(self.tstamp_directories,
-                                     key=self.tstamp_directories.get)
+                sorted_uids = sorted(cls.tstamp_directories,
+                                     key=cls.tstamp_directories.get)
                 oldest_uid = sorted_uids[0]  # FIXME: More complex control needed for pinning
-                oldest_page = self.page_directories[oldest_uid]
+                oldest_page = cls.page_directories[oldest_uid]
                 assert(oldest_page is not None)
 
                 # Check if old_page is dirty => write back
                 if oldest_page.dirty == 1:
-                    old_page_path = self.uid_to_path(oldest_uid)
+                    old_page_path = cls.uid_to_path(oldest_uid)
                     write_page(oldest_page, old_page_path)
 
-                self.page_directories[oldest_uid] = None
-                del self.tstamp_directories[oldest_uid]
+                cls.page_directories[oldest_uid] = None
+                del cls.tstamp_directories[oldest_uid]
 
-            self.page_directories[uid] = read_page(page_path)
+            cls.page_directories[uid] = read_page(page_path)
 
-        self.tstamp_directories[uid] = datetime.timestamp(datetime.now())
-        return self.page_directories[uid]
+        cls.tstamp_directories[uid] = datetime.timestamp(datetime.now())
+        return cls.page_directories[uid]
 
-    def close(self):
-        active_uids = self.tstamp_directories.values()
+    def close(cls):
+        active_uids = cls.tstamp_directories.values()
         while len(active_uids) > 0:
             active_uids_copy = copy.deepcopy(active_uids)
             # Loop Through Pages in Bufferpool
             for i, uid in enumerate(active_uids_copy):
-                page = self.page_directories[uid]
+                page = cls.page_directories[uid]
                 # Write Back Dirty Pages
                 if page.dirty and not page.pinned:
-                    page_path = self.uid_to_path(uid)
+                    page_path = cls.uid_to_path(uid)
                     write_page(page, page_path)
                     active_uids.pop(uid)
 

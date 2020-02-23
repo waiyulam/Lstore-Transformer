@@ -7,10 +7,9 @@ class Database():
 
     def __init__(self):
         self.tables = []
-        self.buffer_pool = BufferPool()
 
     def open(self, path):
-        self.buffer_pool.initial_path(path)
+        BufferPool.initial_path(path)
 
         # Restore Existed Table on Disk
         tables = os.listdir(path)
@@ -30,24 +29,24 @@ class Database():
         for line in lines:
             t_name, base_tail, column_id, page_range_id, page_id = line.strip(',')
             uid = tuple(t_name, base_tail, int(column_id), int(page_range_id), int(page_id))
-            self.buffer_pool.add_page(uid)
+            BufferPool.add_page(uid)
         f.close()
 
     def close(self):
-        self.buffer_pool.close()
+        BufferPool.close()
 
         # Write Table Config file
         for table in self.tables:
             t_name = table.name
-            f = open(os.path.join(self.buffer_pool.path, t_name, "table.txt"), "w")
+            f = open(os.path.join(BufferPool.path, t_name, "table.txt"), "w")
             my_list = [t_name, table.num_columns, table.key, table.num_updates, table.num_records]
             line = ','.join(my_list) + "\n"
             f.write(line)
             f.close()
 
         # Write Page Directory Config file
-        all_uids = self.buffer_pool.page_directories.keys()
-        f = open(os.path.join(self.buffer_pool.path, "page_directory.txt"), "w")
+        all_uids = BufferPool.page_directories.keys()
+        f = open(os.path.join(BufferPool.path, "page_directory.txt"), "w")
         for uid in all_uids:
             t_name, base_tail, column_id, page_range_id, page_id = uid
             my_list = [t_name, base_tail, int(column_id), int(page_range_id), int(page_id)]
