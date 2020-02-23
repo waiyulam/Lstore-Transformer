@@ -32,3 +32,9 @@ class Database():
             self.tables.remove(name)
         else:
             pass
+
+    """
+    # Returns table with the passed name
+    """
+    def get_table(self, name):
+        pass

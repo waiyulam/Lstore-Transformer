@@ -64,6 +64,10 @@ class Query:
     """
     # Read a record with specified key
     """
+    ###
+    # def select(self, key, column, query_columns):
+    ###
+
     def select(self, key, query_columns):
         # Get the indirection id given choice of primary keys
         page_pointer = self.index.locate(self.table.key,key)
@@ -152,6 +156,7 @@ class Query:
     :param start_range: int         # Start of the key range to aggregate
     :param end_range: int           # End of the key range to aggregate
     :param aggregate_columns: int   # Index of desired column to aggregate
+        # this function is only called on the primary key.
     """
 
     def sum(self, start_range, end_range, aggregate_column_index):
