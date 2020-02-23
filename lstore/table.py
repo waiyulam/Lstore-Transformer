@@ -42,7 +42,7 @@ class Table:
         self.num_records = 0
         self.__init_pages()
         # background merge thread is running as table started
-        thread.start_new_thread(self._merge())
+        thread.start_new_thread(self.__merge())
 
     def __init_pages(self):
         self.page_directory = {
@@ -54,6 +54,14 @@ class Table:
         for i in range(self.num_columns + NUM_METAS):
             self.page_directory["Base"][i] = [Page_Range()]
             self.page_directory["Tail"][i] = [[Page()]]
+
+    def get_base_loc(self, col, key):
+        page_ranges = self.page_directory["Base"][col]
+        for i in range(len(page_ranges)):
+            for j in in range(page_ranges[i].curr_page+1):
+                for k in range(page_ranges[i].get_value(j)):
+                    if key == page_ranges[i].get_value(j).get(k)
+                        return i, j, k
 
     # want to find physical location of tail record given tid
     # tid : bytesarray
@@ -175,7 +183,8 @@ Needs special dealings with deleted records
                     rid = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
                     if cur_base_map[rid] == 1:
                         update_val = cur_tail_batch[rev_page].get(rev_rec)
-                        self.base_dir_copy[col_index][cur_rg_index].get_value(rev_page).update(rev_rec, update_val)
+                        i,j,k = get_base_loc(RID_COLUMN, self.page_directory["Tail"][RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec))
+                        self.base_dir_copy[col_index][i].get_value(j).update(k, update_val)
                         cur_base_map[rid] = 0
                         mergeSeen -= 1
                     # if all RIDs are seen for updated base records
