@@ -1,11 +1,19 @@
 # Global Setting for the Database
 # PageSize, StartRID, etc..
 
-MAX_RECORDS = 512 # 4096/8
-MAX_COLUMNS = 64
+# MAX_COLUMNS = 64
+
+# special value
 MAXINT = 2**64 - 1
-NUM_METAS = 7
+
+# fixed parameter
+MAX_RECORDS = 512 # 4096/8
+
+# defined parameters
 PAGE_RANGE = 16
+
+# meta_data
+NUM_METAS = 7
 INDIRECTION_COLUMN = 0
 RID_COLUMN = 1
 SCHEMA_ENCODING_COLUMN = 2
