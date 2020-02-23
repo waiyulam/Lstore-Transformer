@@ -94,10 +94,10 @@ class Table:
                     self.page_directory["Base"][i][-1].write()
                     page = self.page_directory["Base"][i][-1].get()
             else:
-                    # Page is full, need a new page range and new page
-                    self.page_directory["Base"][i].append(Page_Range())
-                    self.page_directory["Tail"][i].append([Page()])
-                    page = self.page_directory["Base"][i][-1].get()
+                # Page is full, need a new page range and new page
+                self.page_directory["Base"][i].append(Page_Range())
+                self.page_directory["Tail"][i].append([Page()])
+                page = self.page_directory["Base"][i][-1].get()
             page.write(value)
 
     def tail_page_write(self, data, range_index):
