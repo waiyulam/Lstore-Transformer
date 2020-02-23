@@ -123,7 +123,7 @@ class Table:
         page_ranges = self.page_directory["Base"][col]
         for i in range(len(page_ranges)):
             for j in in range(page_ranges[i].curr_page+1):
-                for k in range(page_ranges[i].get_value(j)):
+                for k in range(page_ranges[i].get_value(j).num_records):
                     if key == page_ranges[i].get_value(j).get(k)
                         return i, j, k
 
