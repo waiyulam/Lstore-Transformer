@@ -4,7 +4,7 @@ class Database():
 
     def __init__(self):
         self.tables = []
-        self.bufferpool = buffer_pool()
+        # self.bufferpool = buffer_pool()
 
     def open(self, path):
         pass
@@ -37,4 +37,6 @@ class Database():
     # Returns table with the passed name
     """
     def get_table(self, name):
-        pass
+        for table in self.tables:
+            if (table.name == name):
+                return table
