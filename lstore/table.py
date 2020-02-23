@@ -87,7 +87,7 @@ class Table:
             page_range = self.page_directory["Base"][i][-1]
             page = page_range.page_range[page_range.curr_page]
             # check if page range currently at the end of the page
-            if not page_range.end_page():
+            if not page_range.end_range():
                 # Page range not at the end. Verify if Page is full
                 if not page.has_capacity():
                     # need a new page allocation
