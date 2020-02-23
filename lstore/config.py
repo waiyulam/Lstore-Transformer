@@ -3,6 +3,9 @@
 
 # MAX_COLUMNS = 64
 
+# special value
+MAXINT = 2**64 - 1
+
 # fixed parameter
 MAX_RECORDS = 512 # 4096/8
 

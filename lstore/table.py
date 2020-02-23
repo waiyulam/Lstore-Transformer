@@ -54,6 +54,7 @@ class Table:
         for i in range(self.num_columns + NUM_METAS):
             self.page_directory["Base"][i] = [Page_Range()]
             self.page_directory["Tail"][i] = [[Page()]]
+    
     """
     Step1: Identify committed tail records in tail pages:
     Select a set of consecutive fully committed tail records (or pages) since the
