@@ -1,47 +1,51 @@
 from lstore.table import Table
 from lstore.buffer_pool import BufferPool
+import os
 
 
 class Database():
 
     def __init__(self):
         self.tables = []
-        self.tables_name = []
         self.buffer_pool = BufferPool()
 
     def open(self, path):
-        self.buffer_pool.init_path(path)
-
+        self.buffer_pool.initial_path(path)
         tables = os.listdir(path)
         meta_files = []
         for table in tables:
             meta_files.append(os.path.join(path, table, "config.txt"))
-            self.tables_name.append(table)
 
-        for name, meta_f in zip(self.tables_name, meta_files):
+        for meta_f in meta_files:
             # Load in Table() meta data
             f = open(meta_f, "r")
-            name, num_columns, key, num_updates, num_records = f.readline()
-            old_table = Table(name, num_columns, key)
-            old_table.num_updates = num_updates
-            old_table.num_records = num_records
+            lines = f.readlines()
+            t_name, num_columns, key, num_updates, num_records = lines[0].strip(',')
+            old_table = Table(t_name, int(num_columns), int(key))
+            old_table.num_updates = int(num_updates)
+            old_table.num_records = int(num_records)
             f.close()
 
-            self.buffer_pool.initial_meta(meta_f, name)
+            self.tables.append(old_table)
+            # self.buffer_pool.add_meta(t_name, lines[1:])
+
+            for line in lines[1:]:
+                base_tail, column_id, page_range_id, page_id = line.strip(',')
+                uid = tuple(t_name, base_tail, int(column_id), int(page_range_id), int(page_id))
 
     def close(self):
-        self.buffer_pool.write_back_all()
+        self.buffer_pool.close()
 
         # Write Table Config file
         for table in self.tables:
             t_name = table.name
             f = open(os.path.join(self.buffer_pool.path, t_name, "config.txt", "w"))
 
-            my_list = [t_name, table.num_columns, table.key, table.num_updates, table.num_records]
+            my_list = [table.num_columns, table.key, table.num_updates, table.num_records]
             line = ','.join(my_list) + "\n"
             f.write(line)
-            uids = self.buffer_pool.uid_2_pageid[t_name].keys()
 
+            uids = self.buffer_pool.uid_2_pageid[t_name].keys()
             for uid in uids:
                 base_tail, column_id, page_range_id, page_id = uid
                 my_list = [base_tail, column_id, page_range_id, page_id]

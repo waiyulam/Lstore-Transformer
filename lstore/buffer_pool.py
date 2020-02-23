@@ -10,7 +10,7 @@ import copy
 
 class BufferPool():
 
-    def __init__(self, path):
+    def __init__(self):
         self.size = BUFFER_POOL_SIZE
         self.path = None
 
@@ -23,30 +23,12 @@ class BufferPool():
         # Pop the least freuqently used page
         self.timestamp = []  # [[timestamp1, uid1], [timestamp2, uid2] ...]
 
-    def init_path(self, path):
+    def initial_path(self, path):
         self.path = path
 
-    def initial_meta(self, meta_f, t_name):
-        f = open(meta_f, "r")
-        lines = f.readlines()
-        f.close()
-
-        for line in lines[1:]:
-            base_tail, column_id, page_range_id, page_id = line.strip(',')
-            uid = tuple(t_name, base_tail, column_id, page_range_id, page_id)
-            if uid not in self.uid_2_pageid.keys():
-                self.uid_2_pageid[uid] = -1
-
-    # def initial_pool(self):
-    #     # Set used Tables
-    #     self.used_frequency = heapq.nlargest(self.size, self.all_frequency)
-    #     for freq, uid in self.used_frequency:
-    #         t_name, base_tail, column_id, page_range_id, page_id = uid
-    #         page_path = os.path.join(self.path, t_name, base_tail, column_id, page_range_id, str(page_id) + ".txt")
-    #         page = self.read_page(page_path)
-    #         # Point to corresponding page index
-    #         self.uid_2_pageid[uid] = len(self.pages)
-    #         self.pages.append(page)
+    def add_meta(self, uid):
+        if uid not in self.uid_2_pageid.keys():  # TODO: This might be unnecessary
+            self.uid_2_pageid[uid] = -1
 
     def read_page(self, page_path):
         f = open(page_path, "rb")
@@ -91,7 +73,7 @@ class BufferPool():
 
                 # Check if old_page is dirty => write back
                 if old_page.dirty == 1:
-                    t_name, base_tail, column_id, page_range_id, page_id = least_uid
+                    t_name, base_tail, column_id, page_range_id, page_id = oldest_uid
                     old_page_path = os.path.join(self.path, t_name, base_tail, column_id, page_range_id, str(page_id) + ".txt")
                     self.write_page(old_page, old_page_path)
 
@@ -115,7 +97,7 @@ class BufferPool():
     def is_full(self):
         return len(self.pages) >= self.size
 
-    def write_back_all(self):
+    def close(self):
         while len(self.pages) > 0:
             pages = copy.deepcopy(self.pages)
             # Loop Through Pages in Bufferpool
