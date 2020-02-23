@@ -10,9 +10,9 @@ class Page_Range:
         self.page_range = temp
         self.TPS = 0
 
-    def end_page(self):
-        num_records = self.curr_page*MAX_RECORDS +  self.page_range[self.curr_page].num_records
-        return num_records == PAGE_RANGE*MAX_RECORDS
+    def end_range(self):
+        num_records = self.curr_page * MAX_RECORDS + self.page_range[self.curr_page].num_records
+        return num_records == PAGE_RANGE * MAX_RECORDS
 
     def write(self):
         self.page_range[self.curr_page+1] = Page()
