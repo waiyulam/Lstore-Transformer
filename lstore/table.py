@@ -3,6 +3,9 @@ from lstore.config import *
 from lstore.index import Index
 from time import time
 from lstore.page_range import *
+# queue is used for managing threads, thread is defined per column per page range
+from queue import Queue
+import thread
 
 class Record:
 
@@ -12,6 +15,13 @@ class Record:
         self.columns = columns
         self.indirection = None
 
+# this is for milestone 3, while each page range in each column will be a thread
+# class range_Thread(threading.Thread):
+#     def _init_(self, pg_range):
+#         threading.Thread._init_(self)
+#         self.pg_range = pg_range
+#     def run(self):
+#         pass
 
 
 class Table:
@@ -30,7 +40,10 @@ class Table:
         #self.index = Index(self) # newly added
         self.num_updates = 0
         self.num_records = 0
+        self.queueThreads = Queue()
         self.__init_pages()
+        # background merge thread is running as table started
+        thread.start_new_thread(self._merge())
 
     def __init_pages(self):
         self.page_directory = {
@@ -93,8 +106,7 @@ class Table:
                     # need a new page allocation
                     self.page_directory["Base"][i][-1].write()
                     page = self.page_directory["Base"][i][-1].get()
-                # Page range at the end, check if page is full
-                if not page.has_capacity():
+            else:
                     # Page is full, need a new page range and new page
                     self.page_directory["Base"][i].append(Page_Range())
                     self.page_directory["Tail"][i].append([Page()])
@@ -138,4 +150,22 @@ Apply update until the base range is seen, skipping any intermediate updates
 Needs special dealings with deleted records
 """
 
-    def __merge(self, page_range_index, col_index):
+    def __merge(self):
+        # initialize threads for all the page ranges in every column
+        # if their number of updates within page range is above 2 physical page
+        # Insert selected page range into queue
+        #         if range_records > MERGE_TRIGGER:
+        #             cur_thread = range_Thread(cur_page_range)
+        #             self.queueThreads.put(cur_thread)
+        for i in range(NUM_METAS, NUM_METAS+self.num_columns):
+            for rg_index, cur_tail_pages in enumerate(self.page_directory["Tail"][i]):
+                range_records = 0
+                for j in range(self.curr_page+1):
+                    # check total number of records within page range
+                    range_records += cur_tail_pages[j].num_records
+                if range_records > MERGE_TRIGGER:
+                    self.queueThreads.put([cur_tail_pages, rg_index])
+        while not self.queueThreads.empty():
+            cur_tail_batch, cur_rg_index = self.queueThreads.get()[0], self.queueThreads.get()[1]
+            # create a copy of base page bacth
+            cur_base_batch = self.page_directory["Base"][cur_rg_index]
