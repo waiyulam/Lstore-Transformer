@@ -1,4 +1,6 @@
 from lstore.table import Table
+from lstore.buffer_pool import BufferPool
+
 
 class Database():
 
@@ -8,8 +10,6 @@ class Database():
         self.buffer_pool = BufferPool()
 
     def open(self, path):
-        """
-        """
         self.buffer_pool.init_path(path)
 
         tables = os.listdir(path)
@@ -17,7 +17,7 @@ class Database():
         for table in tables:
             meta_files.append(os.path.join(path, table, "config.txt"))
             self.tables_name.append(table)
-        
+
         for name, meta_f in zip(self.tables_name, meta_files):
             # Load in Table() meta data
             f = open(meta_f, "r")
@@ -27,7 +27,7 @@ class Database():
             old_table.num_records = num_records
             f.close()
 
-            self.buffer_pool.initial_meta(meta_f, name)                
+            self.buffer_pool.initial_meta(meta_f, name)
 
     def close(self):
         self.buffer_pool.write_back_all()
@@ -35,20 +35,19 @@ class Database():
         # Write Table Config file
         for table in self.tables:
             t_name = table.name
-            f = open(os.path.join(self.buffer_pool.path, t_name, "config.txt", "w")
-            
+            f = open(os.path.join(self.buffer_pool.path, t_name, "config.txt", "w"))
+
             my_list = [t_name, table.num_columns, table.key, table.num_updates, table.num_records]
-            line =  ','.join(my_list) + "\n"
+            line = ','.join(my_list) + "\n"
             f.write(line)
             uids = self.buffer_pool.uid_2_pageid[t_name].keys()
-            
+
             for uid in uids:
                 base_tail, column_id, page_range_id, page_id = uid
                 my_list = [base_tail, column_id, page_range_id, page_id]
                 line = ",".join(my_list) + "\n"
-                f.write(line)            
+                f.write(line)
             f.close()
-
 
     """
     # Creates a new table
