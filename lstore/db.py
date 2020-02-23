@@ -1,36 +1,59 @@
 from lstore.table import Table
+from lstore.buffer_pool import BufferPool
+import os
+
 
 class Database():
 
     def __init__(self):
         self.tables = []
-        self.tables_name = []
         self.buffer_pool = BufferPool()
 
     def open(self, path):
-        """
-        """
-        self.buffer_pool.init_path(path)
+        self.buffer_pool.initial_path(path)
 
+        # Restore Existed Table on Disk
         tables = os.listdir(path)
-        meta_files = []
         for table in tables:
-            meta_files.append(os.path.join(path, table, "config.txt"))
-            self.tables_name.append(table)
-        
-        for name, meta_f in zip(self.tables_name, meta_files):
-            # Load in Table() meta data
-            f = open(meta_f, "r"):
-            name, num_columns, key, num_updates, num_records = f.readline()
-            old_table = Table(name, num_columns, key)
-            old_table.num_updates = num_updates
-            old_table.num_records = num_records
+            f = open(os.path.join(path, table, "table.txt"), "r")
+            lines = f.readlines()
+            t_name, num_columns, key, num_updates, num_records = lines[0].strip(',')
+            old_table = Table(t_name, int(num_columns), int(key))
+            old_table.num_updates = int(num_updates)
+            old_table.num_records = int(num_records)
             f.close()
+            self.tables.append(old_table)
 
-            self.buffer_pool.initial_meta(meta_f, name)                
+        # Restore Page Directory to BufferPool
+        lines = f.readlines()
+        f = open(os.path.join(path, "page_directory.txt"), "r")
+        for line in lines:
+            t_name, base_tail, column_id, page_range_id, page_id = line.strip(',')
+            uid = tuple(t_name, base_tail, int(column_id), int(page_range_id), int(page_id))
+            self.buffer_pool.add_page(uid)
+        f.close()
 
     def close(self):
-        pass
+        self.buffer_pool.close()
+
+        # Write Table Config file
+        for table in self.tables:
+            t_name = table.name
+            f = open(os.path.join(self.buffer_pool.path, t_name, "table.txt"), "w")
+            my_list = [t_name, table.num_columns, table.key, table.num_updates, table.num_records]
+            line = ','.join(my_list) + "\n"
+            f.write(line)
+            f.close()
+
+        # Write Page Directory Config file
+        all_uids = self.buffer_pool.page_directories.keys()
+        f = open(os.path.join(self.buffer_pool.path, "page_directory.txt"), "w")
+        for uid in all_uids:
+            t_name, base_tail, column_id, page_range_id, page_id = uid
+            my_list = [t_name, base_tail, int(column_id), int(page_range_id), int(page_id)]
+            line = ",".join(my_list) + "\n"
+            f.write(line)
+        f.close()
 
     """
     # Creates a new table
