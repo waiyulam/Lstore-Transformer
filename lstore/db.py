@@ -4,7 +4,7 @@ class Database():
 
     def __init__(self):
         self.tables = []
-        pass
+        self.bufferpool = buffer_pool()
 
     def open(self, path):
         pass
