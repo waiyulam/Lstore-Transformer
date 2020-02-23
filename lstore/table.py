@@ -124,7 +124,7 @@ class Table:
         for i in range(len(page_ranges)):
             for j in range(page_ranges[i].curr_page+1):
                 for k in range(page_ranges[i].get_value(j).num_records):
-                    if key == page_ranges[i].get_value(j).get(k)
+                    if key == page_ranges[i].get_value(j).get(k):
                         return i, j, k
 
     # want to find physical location of tail record given tid
@@ -192,3 +192,4 @@ class Table:
                 self.page_directory['Tail'][i][range_index].append(Page())
                 page = self.page_directory['Tail'][i][range_index][-1]
             page.write(value)
+
