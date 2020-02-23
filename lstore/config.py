@@ -3,16 +3,11 @@
 
 MAX_RECORDS = 512 # 4096/8
 MERGE_TRIGGER = 2*MAX_RECORDS # number of updates within page range
-MAX_COLUMNS = 64
 # MAX_COLUMNS = 64
-
-
 # fixed parameter
 MAX_RECORDS = 512 # 4096/8
-
 # defined parameters
 PAGE_RANGE = 16
-
 # meta_data
 NUM_METAS = 7
 INDIRECTION_COLUMN = 0
