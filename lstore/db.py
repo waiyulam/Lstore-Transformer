@@ -4,10 +4,30 @@ class Database():
 
     def __init__(self):
         self.tables = []
-        # self.bufferpool = buffer_pool()
+        self.tables_name = []
+        self.buffer_pool = BufferPool()
 
     def open(self, path):
-        pass
+        """
+        """
+        self.buffer_pool.init_path(path)
+
+        tables = os.listdir(path)
+        meta_files = []
+        for table in tables:
+            meta_files.append(os.path.join(path, table, "config.txt"))
+            self.tables_name.append(table)
+        
+        for name, meta_f in zip(self.tables_name, meta_files):
+            # Load in Table() meta data
+            f = open(meta_f, "r"):
+            name, num_columns, key, num_updates, num_records = f.readline()
+            old_table = Table(name, num_columns, key)
+            old_table.num_updates = num_updates
+            old_table.num_records = num_records
+            f.close()
+
+            self.buffer_pool.initial_meta(meta_f, name)                
 
     def close(self):
         pass

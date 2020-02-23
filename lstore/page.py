@@ -4,6 +4,9 @@ class Page:
 
     def __init__(self):
         self.num_records = 0
+        self.frequency = 0
+        self.dirty = 0
+        self.pinned = 0
         self.data = bytearray(4096)
 
     def has_capacity(self):
@@ -21,3 +24,7 @@ class Page:
 
     def update(self, index, value):
         self.data[index * 8 : (index+1) * 8] = (value).to_bytes(8, byteorder='big')
+
+    def from_file(self, page):
+        self.num_records = page.num_records
+        self.data = page.data
