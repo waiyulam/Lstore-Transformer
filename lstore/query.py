@@ -105,10 +105,12 @@ class Query:
         indirect_page_range = self.table.page_directory["Base"][INDIRECTION_COLUMN]
         base_indirection_id =  indirect_page_range[update_range_index].get_value(update_record_page_index).get(update_record_index) # in bytes
         base_id = int.from_bytes(self.table.page_directory["Base"][RID_COLUMN][update_range_index].get_value(update_record_page_index).get(update_record_index), byteorder = "big")
+        base_rid = self.table.page_directory["Base"][RID_COLUMN][update_range_index].get_value(update_record_page_index).get(update_record_index)
         for query_col,val in enumerate(columns):
             if val == None:
                 continue
             else:
+                self.table.page_directory["Base"][NUM_METAS+query_col][update_range_index].Hash_insert(int.from_bytes(base_rid,byteorder='big'))
                 # compute new tail record TID
                 tmp_indice = len(self.table.page_directory["Tail"][INDIRECTION_COLUMN][update_range_index])-1
                 page_records = self.table.page_directory["Tail"][INDIRECTION_COLUMN][update_range_index][tmp_indice].num_records

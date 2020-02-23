@@ -9,6 +9,7 @@ class Page_Range:
         temp[0] = Page()
         self.page_range = temp
         self.TPS = 0
+        self.Hashmap = {}
 
     def end_range(self):
         num_records = self.curr_page * MAX_RECORDS + self.page_range[self.curr_page].num_records
@@ -23,3 +24,6 @@ class Page_Range:
 
     def get_value(self, key):
         return self.page_range[key]
+
+    def Hash_insert(self, rid):
+        self.Hashmap[rid] = 1

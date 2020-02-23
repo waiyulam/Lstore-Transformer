@@ -2,6 +2,7 @@
 # PageSize, StartRID, etc..
 
 MAX_RECORDS = 512 # 4096/8
+MERGE_TRIGGER = 2*MAX_RECORDS # number of updates within page range
 MAX_COLUMNS = 64
 MAXINT = 2**64 - 1
 NUM_METAS = 7
