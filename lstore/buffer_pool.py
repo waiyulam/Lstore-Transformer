@@ -4,6 +4,8 @@ import os
 import heapq
 import pickle
 from datetime import datetime
+import time
+import copy
 
 class BufferPool():
 
@@ -120,3 +122,21 @@ class BufferPool():
 
     def is_full(self):
         return len(self.pages) >= self.size
+
+
+    def write_back_all(self):
+        while len(self.pages) > 0:
+            pages = copy.deepcopy(self.pages)            
+            # Loop Through Pages in Bufferpool
+            for page_id, page in enumerate(pages):
+                # Write Back Dirty Pages
+                if page.dirty and not page.pinned:
+                    _, uid = self.timestamp[page_id]
+                    t_name, base_tail, column_id, page_range_id, page_id = uid
+                    page_path = os.path.join(self.path, t_name, base_tail, column_id, page_range_id, str(page_id) + ".txt")
+                    self.write_page(page, page_path)
+                    self.pages.pop(page_id)
+                    
+            # Wait until Pinned Pages are unpinned
+            time.sleep(1)
+
