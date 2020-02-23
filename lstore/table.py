@@ -93,24 +93,31 @@ class Table:
             page_index,record_index = in_range_tid//MAX_RECORDS,in_range_tid%MAX_RECORDS
             tid_page_range[page_range][page_index].data[record_index*8:(record_index+1)*8] = (0).to_bytes(8, byteorder='big')
             byte_indirect = self.page_directory["Tail"][INDIRECTION_COLUMN][page_range][page_index].get(record_index)
-"""
+    """
     def base_page_write(self, data):
         for i, value in enumerate(data):
             # latest page range
             page_range = self.page_directory["Base"][i][-1]
             page = page_range.page_range[page_range.curr_page]
             # check if page range currently at the end of the page
-            if not page_range.end_page():
+            if not page_range.end_range():
                 # Page range not at the end. Verify if Page is full
                 if not page.has_capacity():
                     # need a new page allocation
                     self.page_directory["Base"][i][-1].write()
                     page = self.page_directory["Base"][i][-1].get()
             else:
+<<<<<<< HEAD
                     # Page is full, need a new page range and new page
                     self.page_directory["Base"][i].append(Page_Range())
                     self.page_directory["Tail"][i].append([Page()])
                     page = self.page_directory["Base"][i][-1].get()
+=======
+                # Page is full, need a new page range and new page
+                self.page_directory["Base"][i].append(Page_Range())
+                self.page_directory["Tail"][i].append([Page()])
+                page = self.page_directory["Base"][i][-1].get()
+>>>>>>> 19562d772f435968f12065428994a4d03af40b69
             page.write(value)
 
     def tail_page_write(self, data, range_index):
@@ -148,8 +155,11 @@ Hashable -> track whether the latest version of a record is seen or not
 Apply update until the base range is seen, skipping any intermediate updates
 
 Needs special dealings with deleted records
-"""
 
+<<<<<<< HEAD
+=======
+"""
+>>>>>>> 19562d772f435968f12065428994a4d03af40b69
     def __merge(self):
         # initialize threads for all the page ranges in every column
         # if their number of updates within page range is above 2 physical page
