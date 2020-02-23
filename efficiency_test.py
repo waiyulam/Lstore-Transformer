@@ -41,6 +41,7 @@ update_time_1 = process_time()
 print("Updating 1k records took:  \t\t\t", update_time_1 - update_time_0)
 
 # Measuring Aggregate Performance
+
 keys = sorted(list(records.keys()))
 agg_time_0 = process_time()
 for c in range(0, grades_table.num_columns):
@@ -50,9 +51,15 @@ for c in range(0, grades_table.num_columns):
 agg_time_1 = process_time()
 print("Aggregate 1k of <1000 record batch took:\t", agg_time_1 - agg_time_0)
 
+
 # Measuring Delete Performance
 delete_time_0 = process_time()
 for i in range(0, 1000):
-    query.delete(92106429 + i)
+    key = 92106429+i
+    query.delete(key)
+    #record = query.select(key, [1, 1, 1, 1, 1])[0]
+#    print(record.columns)
+
+
 delete_time_1 = process_time()
 print("Deleting 1k records took:  \t\t\t", delete_time_1 - delete_time_0)

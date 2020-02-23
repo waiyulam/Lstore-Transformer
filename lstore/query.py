@@ -84,7 +84,7 @@ class Query:
                 continue
             # print(schema_encoding)
             if (base_schema & (1<<query_col))>>query_col == 1:
-                res.append(self.table.get_tail(base_indirection,query_col, page_pointer[0]))
+                res.append(self.table.get_tail(int.from_bytes(base_indirection,byteorder = 'big'),query_col, page_pointer[0]))
             else:
                 res.append(int.from_bytes(self.table.page_directory["Base"][query_col + NUM_METAS][page_pointer[0]].get_value(page_pointer[1]).get(page_pointer[2]), byteorder="big"))
         record = Record(self.table.page_directory["Base"][RID_COLUMN][page_pointer[0]].get_value(page_pointer[1]).get(page_pointer[2]),key,res)
@@ -187,5 +187,43 @@ class Query:
             null_value.append(MAXINT)
 
         #page_range, page_index, record_index = page_pointer[0],page_pointer[1], page_pointer[2]
-        self.update(key, *null_value)
+        page_pointer = self.index.locate(self.table.key,key)
+        update_range_index, update_record_page_index,update_record_index = page_pointer[0],page_pointer[1], page_pointer[2]
+        indirect_page_range = self.table.page_directory["Base"][INDIRECTION_COLUMN]
+        base_indirection_id =  indirect_page_range[update_range_index].get_value(update_record_page_index).get(update_record_index) # in bytes
+        base_id = int.from_bytes(self.table.page_directory["Base"][RID_COLUMN][update_range_index].get_value(update_record_page_index).get(update_record_index), byteorder = "big")
+        tmp_indice = len(self.table.page_directory["Tail"][INDIRECTION_COLUMN][update_range_index])-1
+        page_records = self.table.page_directory["Tail"][INDIRECTION_COLUMN][update_range_index][tmp_indice].num_records
+        total_records = page_records + tmp_indice*MAX_RECORDS
+        next_tid = total_records
+        #next_tid = int.from_bytes(('t'+ str(total_records)).encode(), byteorder = "big")
+        # the record is firstly updated
+        if (int.from_bytes(base_indirection_id,byteorder='big') == MAXINT):
+            # compute new tail record indirection :  the indirection of tail record point backward to base pages
+            rid_page_range = self.table.page_directory["Base"][RID_COLUMN]
+            next_tail_indirection =  rid_page_range[update_range_index].get_value(update_record_page_index).get(update_record_index) # in bytes
+            next_tail_indirection = int.from_bytes(next_tail_indirection,byteorder='big')
+        else:
+            next_tail_indirection = int.from_bytes(base_indirection_id,byteorder='big')
+
+
+        encoding_page_range = self.table.page_directory["Base"][SCHEMA_ENCODING_COLUMN]
+        encoding_base =  encoding_page_range[update_range_index].get_value(update_record_page_index).get(update_record_index) # in bytes
+        old_encoding = int.from_bytes(encoding_base,byteorder="big")
+        new_encoding = int('1'* self.table.num_columns, 2)
+        schema_encoding = new_encoding
+        starttime = datetime_to_int(datetime.datetime.now())
+        lastupdatetime = 0
+        updatetime = 0
+        # update new tail record
+        meta_data = [next_tail_indirection,next_tid,schema_encoding,base_id,starttime,lastupdatetime,updatetime]
+        meta_data.extend(null_value)
+        tail_data = meta_data
+        self.table.tail_page_write(tail_data, update_range_index)
+
+        # overwrite base page with new metadata
+        self.table.page_directory["Base"][INDIRECTION_COLUMN][update_range_index].get_value(update_record_page_index).update(update_record_index, next_tid)
+        self.table.page_directory["Base"][SCHEMA_ENCODING_COLUMN][update_range_index].get_value(update_record_page_index).update(update_record_index, schema_encoding)
+        self.table.num_updates += 1
+
     #    self.table.invalidate_record(page_range, page_index, record_index)
