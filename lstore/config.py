@@ -15,6 +15,7 @@ MERGE_TRIGGER = 2*MAX_RECORDS # number of updates within page range
 
 # meta_data
 NUM_METAS = 7
+BUFFER_POOL_SIZE = 100
 INDIRECTION_COLUMN = 0
 RID_COLUMN = 1
 SCHEMA_ENCODING_COLUMN = 2
