@@ -53,7 +53,16 @@ class Table:
         # reinitialize the page directory to accomodate the page range
         for i in range(self.num_columns + NUM_METAS):
             self.page_directory["Base"][i] = [Page_Range()]
+            # list of page ranges initializing the first with an empty page
             self.page_directory["Tail"][i] = [[Page()]]
+
+    def __get_base_loc(self, col, key):
+        page_ranges = self.page_directory["Base"][col]
+        for i in range(len(page_ranges)):
+            for j in range(page_ranges[i].curr_page+1):
+                for k in range(page_ranges[i].get_value(j).num_records):
+                    if key == page_ranges[i].get_value(j).get(k):
+                        return i, j, k
 
     """
     Step1: Identify committed tail records in tail pages:
@@ -118,14 +127,6 @@ class Table:
                 if mergeSeen == 0:
                     break
             self.base_dir_copy[col_index][cur_rg_index].TPS = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
-
-    def get_base_loc(self, col, key):
-        page_ranges = self.page_directory["Base"][col]
-        for i in range(len(page_ranges)):
-            for j in range(page_ranges[i].curr_page+1):
-                for k in range(page_ranges[i].get_value(j).num_records):
-                    if key == page_ranges[i].get_value(j).get(k):
-                        return i, j, k
 
     # want to find physical location of tail record given tid
     # tid : bytesarray
