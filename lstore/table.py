@@ -93,8 +93,7 @@ class Table:
                     # need a new page allocation
                     self.page_directory["Base"][i][-1].write()
                     page = self.page_directory["Base"][i][-1].get()
-                # Page range at the end, check if page is full
-                if not page.has_capacity():
+            else:
                     # Page is full, need a new page range and new page
                     self.page_directory["Base"][i].append(Page_Range())
                     self.page_directory["Tail"][i].append([Page()])
