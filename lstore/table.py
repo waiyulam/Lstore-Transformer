@@ -232,6 +232,7 @@ class Table:
             # Verify Page is not full
             if not page.has_capacity():
                 args[-1] += 1
+                self.latest_tail[(i, range_index)] = args[-1] # Update Latest Tail
                 page = BufferPool.get_page(*args)
 
             page.dirty = 1

@@ -150,5 +150,9 @@ class BufferPool:
                     write_page(page, page_path)
                     active_uids.pop(active_uids.index(uid)) # TODO: Can be faster easily
 
+                # Not Dirty => No need to write to disk => Don't Handle
+                if not page.dirty:
+                    active_uids.pop(active_uids.index(uid))
+
             # Wait until Pinned Pages are unpinned
             time.sleep(1)
