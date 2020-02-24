@@ -11,6 +11,7 @@ class Database():
     def open(self, path):
         BufferPool.initial_path(path)
 
+        name2idx= {}
         # Restore Existed Table on Disk
         tables = os.listdir(path)
         for table in tables:
@@ -21,15 +22,23 @@ class Database():
             old_table.num_updates = int(num_updates)
             old_table.num_records = int(num_records)
             f.close()
+            name2idx[t_name] = len(self.tables)
             self.tables.append(old_table)
 
         # Restore Page Directory to BufferPool
         lines = f.readlines()
         f = open(os.path.join(path, "page_directory.txt"), "r")
+        prev_li = [None] * 5
         for line in lines:
             t_name, base_tail, column_id, page_range_id, page_id = line.strip(',')
             uid = tuple(t_name, base_tail, int(column_id), int(page_range_id), int(page_id))
             BufferPool.add_page(uid)
+
+            if prev_li[-2] != page_range_id and prev_li[1] == "Tail":
+                self.tables[name2idx[t_name]].add_latest_tail(column_id, page_range_id, page_id)
+            prev_li = [t_name, base_tail, column_id, page_range_id, page_id]
+
+
         f.close()
 
     def close(self):

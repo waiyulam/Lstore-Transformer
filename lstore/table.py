@@ -3,6 +3,7 @@ from lstore.config import *
 from lstore.index import Index
 from time import time
 from lstore.page_range import *
+from lstore.buffer_pool import BufferPool
 # queue is used for managing threads, thread is defined per column per page range
 from queue import Queue
 import _thread as thread
@@ -40,29 +41,35 @@ class Table:
         #self.index = Index(self) # newly added
         self.num_updates = 0
         self.num_records = 0
-        self.__init_pages()
+        self.latest_tail = {}  # Key: tuple(col, range), Value: Page_id
+        # self.__init_pages()
         # background merge thread is running as table started
         thread.start_new_thread(self.__merge())
 
-    def __init_pages(self):
-        self.page_directory = {
-            "Base": {},
-            "Tail": {}
-        }
+    def add_latest_tail(self, column_id, page_range_id, page_id):
+        uid = tuple(int(column_id), int(page_range_id))
+        self.add_latest_tail[uid] = int(page_id)
 
-        # reinitialize the page directory to accomodate the page range
-        for i in range(self.num_columns + NUM_METAS):
-            self.page_directory["Base"][i] = [Page_Range()]
-            # list of page ranges initializing the first with an empty page
-            self.page_directory["Tail"][i] = [[Page()]]
+    # def __init_pages(self):
+    #     self.page_directory = {
+    #         "Base": {},
+    #         "Tail": {}
+    #     }
 
-    def __get_base_loc(self, col, key):
-        page_ranges = self.page_directory["Base"][col]
-        for i in range(len(page_ranges)):
-            for j in range(page_ranges[i].curr_page+1):
-                for k in range(page_ranges[i].get_value(j).num_records):
-                    if key == page_ranges[i].get_value(j).get(k):
-                        return i, j, k
+    #     # reinitialize the page directory to accomodate the page range
+    #     for i in range(self.num_columns + NUM_METAS):
+    #         self.page_directory["Base"][i] = [Page_Range()]
+    #         # list of page ranges initializing the first with an empty page
+    #         self.page_directory["Tail"][i] = [[Page()]]
+
+    # TODO: Dont Remove this yet
+    # def __get_base_loc(self, col, key):
+    #     page_ranges = self.page_directory["Base"][col]
+    #     for i in range(len(page_ranges)):
+    #         for j in range(page_ranges[i].curr_page+1):
+    #             for k in range(page_ranges[i].get_value(j).num_records):
+    #                 if key == page_ranges[i].get_value(j).get(k):
+    #                     return i, j, k
 
     """
     Step1: Identify committed tail records in tail pages:
@@ -133,15 +140,18 @@ class Table:
     def get_tail(self,tid,column, range_index):
         #tid_str = str(tid.decode()).split('t')[1]
     #    tid = int(tid_str)
-        return int.from_bytes(self.page_directory["Tail"][column+NUM_METAS][range_index][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big')
+        # return int.from_bytes(self.page_directory["Tail"][column+NUM_METAS][range_index][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big')
+        args = [self.name, "Tail", column+NUM_METAS, range_index, tid//MAX_RECORDS, tid%MAX_RECORDS]
+        return int.from_bytes(BufferPool.get_record(*args), ,byteorder='big')
 
     # return the columns of attributes given tail record
     def get_tail_columns(self, tid, range_index):
         columns = []
     #    tid_str = str(tid.decode()).split('t')[1]
     #    tid = int(tid_str)
-        for k in range(0,self.num_columns):
-            columns.append(int.from_bytes(self.page_directory["Tail"][k+NUM_METAS][range_index][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))
+        for column_id in range(0,self.num_columns):
+            # columns.append(int.from_bytes(self.page_directory["Tail"][column_id+NUM_METAS][range_index][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big'))
+            columns.append(self.get_tail(tid, column_id, range_index))
         return columns
 
 
@@ -168,29 +178,48 @@ class Table:
     """
     def base_page_write(self, data):
         for i, value in enumerate(data):
-            # latest page range
-            page_range = self.page_directory["Base"][i][-1]
-            page = page_range.page_range[page_range.curr_page]
+            range_index = (self.num_records//MAX_RECORDS)//PAGE_RANGE
+            page_index = (self.num_records//MAX_RECORDS) % PAGE_RANGE
+            args = [self.name, "Base", i, range_index, page_index]
+            # latest base page
+            page = BufferPool.get_page(*args)
+
+            # page_range = self.page_directory["Base"][i][-1]
+            # page = page_range.page_range[page_range.curr_page]
+
             # check if page range currently at the end of the page
-            if not page_range.end_range():
+            if page_index < PAGE_RANGE:
                 # Page range not at the end. Verify if Page is full
                 if not page.has_capacity():
                     # need a new page allocation
-                    self.page_directory["Base"][i][-1].write()
-                    page = self.page_directory["Base"][i][-1].get()
+                    args[-1] += 1  # increment page index
+                    page = BufferPool.get_page(*args)
+
+                    # self.page_directory["Base"][i][-1].write()
+                    # page = self.page_directory["Base"][i][-1].get()
             else:
                 # Page is full, need a new page range and new page
-                self.page_directory["Base"][i].append(Page_Range())
-                self.page_directory["Tail"][i].append([Page()])
-                page = self.page_directory["Base"][i][-1].get()
+                args[-2] += 1  # Increment Page Range
+                args[-1] = 0  # Reset Page Index to 0
+                page = BufferPool.get_page(*args)  # Create New Base Page Range
+
+                args[1] = "Tail"
+                BufferPool.add_page(tuple(args))  # Create new Tail Page
+                self.add_latest_tail(args[2], args[3], args[4])
+
             page.write(value)
+
 
     def tail_page_write(self, data, range_index):
         for i, value in enumerate(data):
-            page = self.page_directory['Tail'][i][range_index][-1]
+            page_id = self.latest_tail[tuple(i, range_index)]
+            args = [self.name, "Tail", i, range_index, page_id]
+            page = BufferPool.get_page(*args)
+
             # Verify Page is not full
             if not page.has_capacity():
-                self.page_directory['Tail'][i][range_index].append(Page())
-                page = self.page_directory['Tail'][i][range_index][-1]
-            page.write(value)
+                args[-1] += 1
+                page = BufferPool.get_page(*args)
 
+            page.dirty = 1
+            page.write(value)

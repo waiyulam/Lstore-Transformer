@@ -46,8 +46,12 @@ class BufferPool:
         cls.path = path
 
     @classmethod
-    def add_page(cls, uid):
-        cls.page_directories[uid] = None
+    def add_page(cls, uid, default=True):
+        if default:
+            cls.page_directories[uid] = None
+        else:
+            cls.page_directories[uid] = Page()
+            cls.page_directories[uid].dirty = 1
 
     @classmethod
     def is_full(cls):
@@ -77,26 +81,38 @@ class BufferPool:
         if cls.is_page_in_buffer(uid):
             # No Space in bufferbool, write LRU page to disk
             if cls.is_full():
-                # Pop least recently used page in cache
-                sorted_uids = sorted(cls.tstamp_directories,
-                                     key=cls.tstamp_directories.get)
-                oldest_uid = sorted_uids[0]  # FIXME: More complex control needed for pinning
-                oldest_page = cls.page_directories[oldest_uid]
-                assert(oldest_page is not None)
+                cls.remove_lru_page()
 
-                # Check if old_page is dirty => write back
-                if oldest_page.dirty == 1:
-                    old_page_path = cls.uid_to_path(oldest_uid)
-                    write_page(oldest_page, old_page_path)
-
-                cls.page_directories[oldest_uid] = None
-                del cls.tstamp_directories[oldest_uid]
-
-            cls.page_directories[uid] = read_page(page_path)
+            if os.path.isfile(page_path):
+                cls.page_directories[uid] = read_page(page_path)
+            else:
+                cls.add_page(uid)
 
         cls.tstamp_directories[uid] = datetime.timestamp(datetime.now())
         return cls.page_directories[uid]
 
+    def remove_lru_page(cls):
+        # Pop least recently used page in cache
+        sorted_uids = sorted(cls.tstamp_directories,
+                                key=cls.tstamp_directories.get)
+        oldest_uid = sorted_uids[0]  # FIXME: More complex control needed for pinning
+        oldest_page = cls.page_directories[oldest_uid]
+        assert(oldest_page is not None)
+
+        # Check if old_page is dirty => write back
+        if oldest_page.dirty == 1:
+            old_page_path = cls.uid_to_path(oldest_uid)
+            write_page(oldest_page, old_page_path)
+
+        cls.page_directories[oldest_uid] = None
+        del cls.tstamp_directories[oldest_uid]
+
+    @classmethod
+    def get_record(cls, t_name, base_tail, column_id, page_range_id, page_id, record_id):
+        page = cls.get_page(t_name, base_tail, column_id, page_range_id, page_id)
+        return page.get(record_id)
+
+    @classmethod
     def close(cls):
         active_uids = cls.tstamp_directories.values()
         while len(active_uids) > 0:
