@@ -26,4 +26,4 @@ class Page_Range:
         return self.page_range[key]
 
     def Hash_insert(self, rid):
-        self.Hashmap[rid] = 1
+        self.Hashmap[rid] = 1 # 1 if updated, 0 otherwiese
