@@ -83,6 +83,13 @@ class BufferPool:
             if cls.is_full():
                 cls.remove_lru_page()
             cls.add_page(uid, default=False)
+            # Create File if not existed => Avoid calling add_page more than once to overwrite the Page()
+            dirname = os.path.dirname(page_path)
+            if not os.path.isdir(dirname):
+                os.makedirs(dirname)
+            f = open(page_path, "w+")
+            f.close()
+
         # Existed Page
         else:
             # Existed Page not in buffer => Read From Disk
