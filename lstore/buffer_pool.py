@@ -98,6 +98,7 @@ class BufferPool:
                     cls.remove_lru_page()
                 cls.page_directories[uid] = read_page(page_path)
 
+        # Old Code: Has Bug
         # # Page not loaded in buffer, load from disk
         # if cls.is_page_in_buffer(uid):
         #     # No Space in bufferbool, write LRU page to disk

@@ -1,6 +1,7 @@
 from lstore.db import Database
 from lstore.query import Query
 from lstore.config import *
+from lstore.buffer_pool import BufferPool
 
 from random import choice, randint, sample, seed
 # from colorama import Fore, Back, Style
@@ -9,7 +10,10 @@ os.system("clear")
 # Student Id and 4 grades
 # init()
 db = Database()
-grades_table = db.create_table('Grades', 5, 0)
+db.open('./ECS165')
+# First Time => create_table, afterwards => get_table
+# grades_table = db.create_table('Grades', 5, 0)
+# grades_table = db.get_table('Grades')
 query = Query(grades_table)
 
 records = {}
@@ -46,6 +50,7 @@ for key in records:
         original = records[key].copy()
         records[key][i] = value
         query.update(key, *updated_columns)
+        # import pdb; pdb.set_trace()
         record = query.select(key, [1, 1, 1, 1, 1])[0]
         error = False
         for j, column in enumerate(record.columns):
@@ -71,4 +76,5 @@ for c in range(0, grades_table.num_columns):
         # else:
         #     print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
 print('Passed SUM test.')
+db.close()
 

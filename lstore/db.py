@@ -2,8 +2,23 @@ from lstore.table import Table
 from lstore.buffer_pool import BufferPool
 import os
 import time
+import pickle
 
 # TODO: Write & Reaed latest_tail of each table to disk
+
+def read_table(path):
+    f = open(path, "rb")
+    table = pickle.load(f)
+    f.close()
+
+    return table
+
+
+def write_table(path, table):
+    f = open(path, 'wb')
+    pickle.dump(table, f)
+    f.close()
+
 
 class Database():
 
@@ -20,17 +35,9 @@ class Database():
         name2idx= {}
         # Restore Existed Table on Disk
         tables = [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
-        for table in tables:
-            f = open(os.path.join(path, table, "table.txt"), "r")
-            lines = f.readlines()
-            # print(lines[0])
-            t_name, num_columns, key, num_updates, num_records = lines[0].rstrip('\n').split(',')
-            old_table = Table(t_name, int(num_columns), int(key))
-            old_table.num_updates = int(num_updates)
-            old_table.num_records = int(num_records)
-            import pdb; pdb.set_trace()
-
-            f.close()
+        for t_name in tables:
+            t_path = os.path.join(path, t_name, 'table.pkl')
+            old_table = read_table(t_path)
             name2idx[t_name] = len(self.tables)
             self.tables.append(old_table)
 
@@ -64,13 +71,8 @@ class Database():
         # Write Table Config file
         for table in self.tables:
             t_name = table.name
-            # fname = os.path.join(BufferPool.path, t_name, "table.txt")
-            f = open(os.path.join(BufferPool.path, t_name, "table.txt"), "w+")
-            my_list = [t_name, str(table.num_columns), str(table.key), str(table.num_updates), str(table.num_records)]
-            line = ','.join(my_list) + "\n"
-            import pdb; pdb.set_trace()
-            f.write(line)
-            f.close()
+            t_path = os.path.join(BufferPool.path, t_name, "table.pkl")
+            write_table(t_path, table)
         print("Updating table.txt: {}".format(time.time() - s_time))
 
 

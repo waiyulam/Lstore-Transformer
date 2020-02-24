@@ -37,7 +37,7 @@ class Table:
         self.key = key
         self.num_columns = num_columns
         # TODO: invalid input -> columns > MAX_COLUMNS
-        self.page_directory = {}
+        # self.page_directory = {}
         #self.index = Index(self) # newly added
         self.num_updates = 0
         self.num_records = 0
