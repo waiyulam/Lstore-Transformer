@@ -23,83 +23,137 @@ def write_page(page, page_path):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     f = open(page_path, "wb")
-    f.dump(page)  # Dump entire page object
+    pickle.dump(page, f)  # Dump entire page object
     f.close()
 
 
-class BufferPool():
+class BufferPool:
+    size = BUFFER_POOL_SIZE
+    path = None
+
+    # active pages loaded in bufferpool
+    page_directories = {}
+
+    # Pop the least freuqently used page
+    tstamp_directories = {}
+
     def __init__(self):
-        self.size = BUFFER_POOL_SIZE
-        self.path = None
+        print("Init BufferPool. Do Nothing ...")
+        pass
 
-        # active pages loaded in bufferpool
-        self.page_directories = {}
+    @classmethod
+    def initial_path(cls, path):
+        cls.path = path
 
-        # Pop the least freuqently used page
-        self.tstamp_directories = {}
+    @classmethod
+    def add_page(cls, uid, default=True):
+        if default:
+            cls.page_directories[uid] = None
+        else:
+            cls.page_directories[uid] = Page()
+            cls.page_directories[uid].dirty = 1
 
-    def initial_path(self, path):
-        self.path = path
+    @classmethod
+    def is_full(cls):
+        return len(cls.tstamp_directories) >= cls.size
 
-    def add_page(self, uid):
-        self.page_directories[uid] = None
+    @classmethod
+    def is_page_in_buffer(cls, uid):
+        return cls.page_directories[uid] is not None
 
-    def is_full(self):
-        return len(self.tstamp_directories) >= self.size
-
-    def is_page_in_buffer(self, uid):
-        return self.page_directories[uid] is None
-
-    def uid_to_path(self, uid):
+    @classmethod
+    def uid_to_path(cls, uid):
         """
         Convert uid to path
         uid: tuple(table_name, base_tail, column_id, page_range_id, page_id)
         """
         t_name, base_tail, column_id, page_range_id, page_id = uid
-        path = os.path.join(self.path, t_name, base_tail, column_id,
-                            page_range_id, str(page_id) + ".pkl")
+        path = os.path.join(cls.path, t_name, base_tail, str(column_id),
+                            str(page_range_id), str(page_id) + ".pkl")
         return path
 
-    def get_page(self, t_name, base_tail, column_id, page_range_id, page_id):
-        uid = tuple(t_name, base_tail, column_id, page_range_id, page_id)
-        page_path = self.uid_to_path(uid)
+    @classmethod
+    def get_page(cls, t_name, base_tail, column_id, page_range_id, page_id):
+        uid = (t_name, base_tail, column_id, page_range_id, page_id)
+        page_path = cls.uid_to_path(uid)
+        # import pdb; pdb.set_trace()
 
-        # Page not loaded in buffer, load from disk
-        if self.is_page_in_buffer(uid):
-            # No Space in bufferbool, write LRU page to disk
-            if self.is_full():
-                # Pop least recently used page in cache
-                sorted_uids = sorted(self.tstamp_directories,
-                                     key=self.tstamp_directories.get)
-                oldest_uid = sorted_uids[0]  # FIXME: More complex control needed for pinning
-                oldest_page = self.page_directories[oldest_uid]
-                assert(oldest_page is not None)
+        # Brand New Page => Not on disk
+        if not os.path.isfile(page_path):
+            if cls.is_full():
+                cls.remove_lru_page()
+            cls.add_page(uid, default=False)
+            # Create File if not existed => Avoid calling add_page more than once to overwrite the Page()
+            dirname = os.path.dirname(page_path)
+            if not os.path.isdir(dirname):
+                os.makedirs(dirname)
+            f = open(page_path, "w+")
+            f.close()
 
-                # Check if old_page is dirty => write back
-                if oldest_page.dirty == 1:
-                    old_page_path = self.uid_to_path(oldest_uid)
-                    write_page(oldest_page, old_page_path)
+        # Existed Page
+        else:
+            # Existed Page not in buffer => Read From Disk
+            if not cls.is_page_in_buffer(uid):
+                if cls.is_full():
+                    cls.remove_lru_page()
+                cls.page_directories[uid] = read_page(page_path)
 
-                self.page_directories[oldest_uid] = None
-                del self.tstamp_directories[oldest_uid]
+        # Old Code: Has Bug
+        # # Page not loaded in buffer, load from disk
+        # if cls.is_page_in_buffer(uid):
+        #     # No Space in bufferbool, write LRU page to disk
+        #     if cls.is_full():
+        #         cls.remove_lru_page()
 
-            self.page_directories[uid] = read_page(page_path)
+        #     if os.path.isfile(page_path):
+        #         cls.page_directories[uid] = read_page(page_path)
+        #     else:
+        #         cls.add_page(uid)
+        # import pdb; pdb.set_trace()
 
-        self.tstamp_directories[uid] = datetime.timestamp(datetime.now())
-        return self.page_directories[uid]
+        cls.tstamp_directories[uid] = datetime.timestamp(datetime.now())
+        return cls.page_directories[uid]
 
-    def close(self):
-        active_uids = self.tstamp_directories.values()
+    @classmethod
+    def remove_lru_page(cls):
+        # Pop least recently used page in cache
+        sorted_uids = sorted(cls.tstamp_directories,
+                                key=cls.tstamp_directories.get)
+        oldest_uid = sorted_uids[0]  # FIXME: More complex control needed for pinning
+        oldest_page = cls.page_directories[oldest_uid]
+        assert(oldest_page is not None)
+
+        # Check if old_page is dirty => write back
+        if oldest_page.dirty == 1:
+            old_page_path = cls.uid_to_path(oldest_uid)
+            write_page(oldest_page, old_page_path)
+
+        cls.page_directories[oldest_uid] = None
+        del cls.tstamp_directories[oldest_uid]
+
+    @classmethod
+    def get_record(cls, t_name, base_tail, column_id, page_range_id, page_id, record_id):
+        page = cls.get_page(t_name, base_tail, column_id, page_range_id, page_id)
+        return page.get(record_id)
+
+    @classmethod
+    def close(cls):
+        active_uids = list(cls.tstamp_directories.keys())
+        # import pdb; pdb.set_trace()
         while len(active_uids) > 0:
             active_uids_copy = copy.deepcopy(active_uids)
             # Loop Through Pages in Bufferpool
             for i, uid in enumerate(active_uids_copy):
-                page = self.page_directories[uid]
+                page = cls.page_directories[uid]
                 # Write Back Dirty Pages
                 if page.dirty and not page.pinned:
-                    page_path = self.uid_to_path(uid)
+                    page_path = cls.uid_to_path(uid)
                     write_page(page, page_path)
-                    active_uids.pop(uid)
+                    active_uids.pop(active_uids.index(uid)) # TODO: Can be faster easily
+
+                # Not Dirty => No need to write to disk => Don't Handle
+                if not page.dirty:
+                    active_uids.pop(active_uids.index(uid))
 
             # Wait until Pinned Pages are unpinned
             time.sleep(1)

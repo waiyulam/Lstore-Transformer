@@ -9,7 +9,9 @@ os.system("clear")
 
 # Student Id and 4 grades
 db = Database()
+# db.open('./ECS165')
 grades_table = db.create_table('Grades', 5, 0)
+# grades_table = db.get_table('Grades')
 query = Query(grades_table)
 records = {}
 
@@ -63,3 +65,4 @@ for i in range(0, 1000):
 
 delete_time_1 = process_time()
 print("Deleting 1k records took:  \t\t\t", delete_time_1 - delete_time_0)
+# db.close()
