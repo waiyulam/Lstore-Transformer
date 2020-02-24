@@ -23,6 +23,7 @@ class Page:
         return self.data[index*8 : (index+1)*8]
 
     def update(self, index, value):
+        self.dirty = 1
         self.data[index * 8 : (index+1) * 8] = (value).to_bytes(8, byteorder='big')
 
     def from_file(self, page):

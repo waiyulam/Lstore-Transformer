@@ -91,6 +91,7 @@ class BufferPool:
         cls.tstamp_directories[uid] = datetime.timestamp(datetime.now())
         return cls.page_directories[uid]
 
+    @classmethod
     def remove_lru_page(cls):
         # Pop least recently used page in cache
         sorted_uids = sorted(cls.tstamp_directories,

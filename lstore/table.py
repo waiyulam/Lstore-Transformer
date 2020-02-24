@@ -48,7 +48,7 @@ class Table:
 
     def add_latest_tail(self, column_id, page_range_id, page_id):
         uid = tuple(int(column_id), int(page_range_id))
-        self.add_latest_tail[uid] = int(page_id)
+        self.latest_tail[uid] = int(page_id)
 
     # def __init_pages(self):
     #     self.page_directory = {
@@ -207,8 +207,8 @@ class Table:
                 BufferPool.add_page(tuple(args))  # Create new Tail Page
                 self.add_latest_tail(args[2], args[3], args[4])
 
+            page.dirty = 1
             page.write(value)
-
 
     def tail_page_write(self, data, range_index):
         for i, value in enumerate(data):
