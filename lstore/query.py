@@ -119,7 +119,7 @@ class Query:
             else:
                 # self.table.page_directory["Base"][NUM_METAS+query_col][update_range_index].Hash_insert(int.from_bytes(base_rid,byteorder='big'))
                 # compute new tail record TID
-                tmp_indice = self.table.latest_tail(tuple(INDIRECTION_COLUMN, update_range_index))
+                tmp_indice = self.table.get_latest_tail((INDIRECTION_COLUMN, update_range_index))
                 args = [self.table.name, "Tail", INDIRECTION_COLUMN, update_range_index, tmp_indice]
                 page_records = BufferPool.get_page(*args).num_records
                 total_records = page_records + tmp_indice*MAX_RECORDS
@@ -159,11 +159,11 @@ class Query:
                 self.table.tail_page_write(tail_data, update_range_index)
 
                 # overwrite base page with new metadata
-                args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer]
+                args = [self.table.name, "Base", INDIRECTION_COLUMN, page_pointer[0], page_pointer[1]]
                 page = BufferPool.get_page(*args)
                 page.update(update_record_index, next_tid)
 
-                args = [self.table.name, "Base", SCHEMA_ENCODING_COLUMN, *page_pointer]
+                args = [self.table.name, "Base", SCHEMA_ENCODING_COLUMN, page_pointer[0], page_pointer[1]]
                 page = BufferPool.get_page(*args)
                 page.update(update_record_index, schema_encoding)
 
@@ -218,7 +218,7 @@ class Query:
         base_rid = BufferPool.get_record(*args)
         base_id = int.from_bytes(base_rid, byteorder='big')
 
-        tmp_indice = self.table.latest_tail(tuple(INDIRECTION_COLUMN, update_range_index))
+        tmp_indice = self.table.get_latest_tail((INDIRECTION_COLUMN, update_range_index))
         args = [self.table.name, "Tail", INDIRECTION_COLUMN, update_range_index, tmp_indice]
         page_records = BufferPool.get_page(*args).num_records
         total_records = page_records + tmp_indice*MAX_RECORDS
@@ -249,11 +249,11 @@ class Query:
         self.table.tail_page_write(tail_data, update_range_index)
 
         # overwrite base page with new metadata
-        args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer]
+        args = [self.table.name, "Base", INDIRECTION_COLUMN, page_pointer[0], page_pointer[1]]
         page = BufferPool.get_page(*args)
         page.update(update_record_index, next_tid)
 
-        args = [self.table.name, "Base", SCHEMA_ENCODING_COLUMN, *page_pointer]
+        args = [self.table.name, "Base", SCHEMA_ENCODING_COLUMN, page_pointer[0], page_pointer[1]]
         page = BufferPool.get_page(*args)
         page.update(update_record_index, schema_encoding)
         self.table.num_updates += 1

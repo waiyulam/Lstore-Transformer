@@ -23,7 +23,7 @@ def write_page(page, page_path):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     f = open(page_path, "wb")
-    f.dump(page)  # Dump entire page object
+    pickle.dump(page, f)  # Dump entire page object
     f.close()
 
 
@@ -59,7 +59,7 @@ class BufferPool:
 
     @classmethod
     def is_page_in_buffer(cls, uid):
-        return cls.page_directories[uid] is None
+        return cls.page_directories[uid] is not None
 
     @classmethod
     def uid_to_path(cls, uid):
@@ -68,25 +68,40 @@ class BufferPool:
         uid: tuple(table_name, base_tail, column_id, page_range_id, page_id)
         """
         t_name, base_tail, column_id, page_range_id, page_id = uid
-        path = os.path.join(cls.path, t_name, base_tail, column_id,
-                            page_range_id, str(page_id) + ".pkl")
+        path = os.path.join(cls.path, t_name, base_tail, str(column_id),
+                            str(page_range_id), str(page_id) + ".pkl")
         return path
 
     @classmethod
     def get_page(cls, t_name, base_tail, column_id, page_range_id, page_id):
-        uid = tuple(t_name, base_tail, column_id, page_range_id, page_id)
+        uid = (t_name, base_tail, column_id, page_range_id, page_id)
         page_path = cls.uid_to_path(uid)
+        # import pdb; pdb.set_trace()
 
-        # Page not loaded in buffer, load from disk
-        if cls.is_page_in_buffer(uid):
-            # No Space in bufferbool, write LRU page to disk
+        # Brand New Page => Not on disk
+        if not os.path.isfile(page_path):
             if cls.is_full():
                 cls.remove_lru_page()
-
-            if os.path.isfile(page_path):
+            cls.add_page(uid, default=False)
+        # Existed Page
+        else:
+            # Existed Page not in buffer => Read From Disk
+            if not cls.is_page_in_buffer(uid):
+                if cls.is_full():
+                    cls.remove_lru_page()
                 cls.page_directories[uid] = read_page(page_path)
-            else:
-                cls.add_page(uid)
+
+        # # Page not loaded in buffer, load from disk
+        # if cls.is_page_in_buffer(uid):
+        #     # No Space in bufferbool, write LRU page to disk
+        #     if cls.is_full():
+        #         cls.remove_lru_page()
+
+        #     if os.path.isfile(page_path):
+        #         cls.page_directories[uid] = read_page(page_path)
+        #     else:
+        #         cls.add_page(uid)
+        # import pdb; pdb.set_trace()
 
         cls.tstamp_directories[uid] = datetime.timestamp(datetime.now())
         return cls.page_directories[uid]
@@ -115,7 +130,8 @@ class BufferPool:
 
     @classmethod
     def close(cls):
-        active_uids = cls.tstamp_directories.values()
+        active_uids = list(cls.tstamp_directories.keys())
+        # import pdb; pdb.set_trace()
         while len(active_uids) > 0:
             active_uids_copy = copy.deepcopy(active_uids)
             # Loop Through Pages in Bufferpool
@@ -125,7 +141,7 @@ class BufferPool:
                 if page.dirty and not page.pinned:
                     page_path = cls.uid_to_path(uid)
                     write_page(page, page_path)
-                    active_uids.pop(uid)
+                    active_uids.pop(active_uids.index(uid)) # TODO: Can be faster easily
 
             # Wait until Pinned Pages are unpinned
             time.sleep(1)

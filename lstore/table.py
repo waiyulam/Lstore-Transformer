@@ -44,11 +44,17 @@ class Table:
         self.latest_tail = {}  # Key: tuple(col, range), Value: Page_id
         # self.__init_pages()
         # background merge thread is running as table started
-        thread.start_new_thread(self.__merge())
+        # thread.start_new_thread(self.__merge())
 
     def add_latest_tail(self, column_id, page_range_id, page_id):
-        uid = tuple(int(column_id), int(page_range_id))
+        # import pdb; pdb.set_trace()
+        uid = (int(column_id), int(page_range_id))
         self.latest_tail[uid] = int(page_id)
+
+    def get_latest_tail(self, uid):
+        # print(BufferPool.page_directories.keys())
+        # import pdb; pdb.set_trace()
+        return self.latest_tail[uid]
 
     # def __init_pages(self):
     #     self.page_directory = {
@@ -102,38 +108,40 @@ class Table:
     #         if range_records > MERGE_TRIGGER:
     #             cur_thread = range_Thread(cur_page_range)
     #             self.queueThreads.put(cur_thread)
+
     def __merge(self):
-        # initialize threads for all the page ranges in every column
-        # if their number of updates within page range is above 2 physical page
-        # Insert selected page range into queue
-        self.queueThreads = Queue()
-        for i in range(NUM_METAS, NUM_METAS+self.num_columns):
-            for rg_index, cur_tail_pages in enumerate(self.page_directory["Tail"][i]):
-                range_records = (len(cur_tail_pages)-1)*MAX_RECORDS + cur_tail_pages[len(cur_tail_pages)-1].num_records
-                if range_records > MERGE_TRIGGER:
-                    self.queueThreads.put([i, rg_index])
-        # create a copy of a base batch, optimizing by only loading updated base records
-        self.base_dir_copy = self.page_directory["Base"]
-        while not self.queueThreads.empty():
-            col_index, cur_rg_index = self.queueThreads.get()[0], self.queueThreads.get()[1]
-            cur_base_map = self.page_directory["Base"][col_index][cur_rg_index].Hashmap
-            mergeSeen = len(cur_base_map)
-            # reading a set of tail pages in reverse order
-            cur_tail_batch = self.page_directory["Tail"][col_index][cur_rg_index]
-            for rev_page in reversed(range(-len(cur_tail_batch), 0)):
-                for rev_rec in reversed(range(-rev_page.num_records, 0)):
-                    rid = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
-                    if cur_base_map[rid] == 1:
-                        update_val = cur_tail_batch[rev_page].get(rev_rec)
-                        self.base_dir_copy[col_index][cur_rg_index].get_value(rev_page).update(rev_rec, update_val)
-                        cur_base_map[rid] = 0
-                        mergeSeen -= 1
-                    # if all RIDs are seen for updated base records
-                    if mergeSeen == 0:
-                        break
-                if mergeSeen == 0:
-                    break
-            self.base_dir_copy[col_index][cur_rg_index].TPS = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
+        # # initialize threads for all the page ranges in every column
+        # # if their number of updates within page range is above 2 physical page
+        # # Insert selected page range into queue
+        # self.queueThreads = Queue()
+        # for i in range(NUM_METAS, NUM_METAS+self.num_columns):
+        #     for rg_index, cur_tail_pages in enumerate(self.page_directory["Tail"][i]):
+        #         range_records = (len(cur_tail_pages)-1)*MAX_RECORDS + cur_tail_pages[len(cur_tail_pages)-1].num_records
+        #         if range_records > MERGE_TRIGGER:
+        #             self.queueThreads.put([i, rg_index])
+        # # create a copy of a base batch, optimizing by only loading updated base records
+        # self.base_dir_copy = self.page_directory["Base"]
+        # while not self.queueThreads.empty():
+        #     col_index, cur_rg_index = self.queueThreads.get()[0], self.queueThreads.get()[1]
+        #     cur_base_map = self.page_directory["Base"][col_index][cur_rg_index].Hashmap
+        #     mergeSeen = len(cur_base_map)
+        #     # reading a set of tail pages in reverse order
+        #     cur_tail_batch = self.page_directory["Tail"][col_index][cur_rg_index]
+        #     for rev_page in reversed(range(-len(cur_tail_batch), 0)):
+        #         for rev_rec in reversed(range(-rev_page.num_records, 0)):
+        #             rid = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
+        #             if cur_base_map[rid] == 1:
+        #                 update_val = cur_tail_batch[rev_page].get(rev_rec)
+        #                 self.base_dir_copy[col_index][cur_rg_index].get_value(rev_page).update(rev_rec, update_val)
+        #                 cur_base_map[rid] = 0
+        #                 mergeSeen -= 1
+        #             # if all RIDs are seen for updated base records
+        #             if mergeSeen == 0:
+        #                 break
+        #         if mergeSeen == 0:
+        #             break
+        #     self.base_dir_copy[col_index][cur_rg_index].TPS = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
+        pass
 
     # want to find physical location of tail record given tid
     # tid : bytesarray
@@ -142,7 +150,7 @@ class Table:
     #    tid = int(tid_str)
         # return int.from_bytes(self.page_directory["Tail"][column+NUM_METAS][range_index][tid//MAX_RECORDS].get(tid%MAX_RECORDS),byteorder='big')
         args = [self.name, "Tail", column+NUM_METAS, range_index, tid//MAX_RECORDS, tid%MAX_RECORDS]
-        return int.from_bytes(BufferPool.get_record(*args), ,byteorder='big')
+        return int.from_bytes(BufferPool.get_record(*args), byteorder='big')
 
     # return the columns of attributes given tail record
     def get_tail_columns(self, tid, range_index):
@@ -183,12 +191,17 @@ class Table:
             args = [self.name, "Base", i, range_index, page_index]
             # latest base page
             page = BufferPool.get_page(*args)
-
             # page_range = self.page_directory["Base"][i][-1]
             # page = page_range.page_range[page_range.curr_page]
 
             # check if page range currently at the end of the page
             if page_index < PAGE_RANGE:
+                # Edge Case
+                if page_index == 0:
+                    t_ages = [self.name, "Tail", i, range_index, page_index]
+                    BufferPool.add_page(tuple(t_ages))  # Create new Tail Page
+                    self.add_latest_tail(t_ages[2], t_ages[3], t_ages[4])
+
                 # Page range not at the end. Verify if Page is full
                 if not page.has_capacity():
                     # need a new page allocation
@@ -212,7 +225,7 @@ class Table:
 
     def tail_page_write(self, data, range_index):
         for i, value in enumerate(data):
-            page_id = self.latest_tail[tuple(i, range_index)]
+            page_id = self.latest_tail[(i, range_index)]
             args = [self.name, "Tail", i, range_index, page_id]
             page = BufferPool.get_page(*args)
 
