@@ -88,7 +88,6 @@ class Query:
             if val != 1:
                 res.append(None)
                 continue
-            # print(schema_encoding)
             if (base_schema & (1<<query_col))>>query_col == 1:
                 res.append(self.table.get_tail(int.from_bytes(base_indirection,byteorder = 'big'),query_col, page_pointer[0]))
             else:
