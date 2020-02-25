@@ -70,7 +70,7 @@ class Query:
     # def select(self, key, column, query_columns):
     ###
 
-    def select(self, key, query_columns):
+    def select(self, key, column, query_columns):
         # Get the indirection id given choice of primary keys
         page_pointer = self.table.index.locate(self.table.key,key)
         # collect base meta datas of this record
@@ -171,7 +171,7 @@ class Query:
                 page.update(update_record_index, schema_encoding)
 
                 self.table.num_updates += 1
-        self.table.event.set()
+        #self.table.event.set()
 
     """
     :param start_range: int         # Start of the key range to aggregate

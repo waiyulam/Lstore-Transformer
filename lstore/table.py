@@ -2,11 +2,14 @@ from lstore.page import *
 from lstore.config import *
 from lstore.index import Index
 from time import time
+import time as t
 from lstore.page_range import *
 from lstore.buffer_pool import BufferPool
 # queue is used for managing threads, thread is defined per column per page range
 from queue import Queue
 import threading
+import multiprocessing as mp
+import os
 
 class Record:
 
@@ -42,12 +45,13 @@ class Table:
         self.num_updates = 0
         self.num_records = 0
         self.latest_tail = {}  # Key: tuple(col, range), Value: Page_id
+        self.merge_pid = None
         self.page_range_meta = {} # Key: tuple(col, range), Value: TPS, num_updates, for tail page ranges
         self.Hashmap = {} # Key: tuple(col, range, rid), Value: 1 for updated, 0 for not, for base page ranges
-        self.event = threading.Event()
+        #self.event = threading.Event()
         # self.__init_pages()
         # background merge thread is running as table started
-        self.mergeThreadController()
+
 
     def add_latest_tail(self, column_id, page_range_id, page_id):
         # import pdb; pdb.set_trace()
@@ -113,8 +117,10 @@ class Table:
         # if their number of updates within page range is above 2 physical page
         # Insert selected page range into queue
         while True:
-            self.event.wait()
             self.queueThreads = Queue()
+            #print(os.getpid())
+            #self.event.wait()
+            #print("merge is running")
             for i in range(NUM_METAS, NUM_METAS+self.num_columns):
                 rg_index = self.num_updates // (MAX_RECORDS*PAGE_RANGE) + 1
                 for page_range in range(rg_index):
@@ -156,14 +162,36 @@ class Table:
                 # TPS updates
                 self.page_range_meta[col_index, cur_rg_index][0] = last_tail_rid
             else:
-                self.event.clear()
+                t.sleep(1)
+                #self.event.clear()
 
 
     def mergeThreadController(self):
-        print("thread is running")
-        t = threading.Thread(target=self.__merge())
-        t.start()
 
+        print("thread is running")
+        r,w = os.pipe()
+        n = os.fork()
+        if n > 0:
+            os.close(w)
+            r = os.fdopen(r,'r')
+            while self.merge_pid is None:
+                res = r.read()
+                if res == "":
+                    continue
+                self.merge_pid = int(res)
+                print("merge_pid", self.merge_pid)
+            r.close()
+            print("Parent process and id is ", os.getpid())
+        else:
+            os.close(r)
+            w = os.fdopen(w,'w')
+            data = "{}".format(os.getpid())
+            print("data: ", data)
+            w.write(data)
+            w.close()
+            self.__merge()
+            print("Child process and id is: ", os.getpid())
+    #    f.start()
         print("thread is finished")
     # want to find physical location of tail record given tid
     # tid : bytesarray
