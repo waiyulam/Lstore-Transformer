@@ -12,8 +12,8 @@ os.system("clear")
 db = Database()
 db.open('./ECS165')
 # First Time => create_table, afterwards => get_table
-# grades_table = db.create_table('Grades', 5, 0)
-# grades_table = db.get_table('Grades')
+#grades_table = db.create_table('Grades', 5, 0)
+grades_table = db.get_table('Grades')
 query = Query(grades_table)
 
 records = {}
@@ -60,7 +60,7 @@ for key in records:
             print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
             exit()
         # else:
-        #     print('update on', original, 'and', updated_columns, ':', record) 
+        #     print('update on', original, 'and', updated_columns, ':', record)
         updated_columns[i] = None
 print('Passed UPDATE test.')
 
@@ -77,4 +77,3 @@ for c in range(0, grades_table.num_columns):
         #     print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
 print('Passed SUM test.')
 db.close()
-
