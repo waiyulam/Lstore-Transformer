@@ -142,7 +142,7 @@ class Table:
                 # reading a set of tail pages in reverse order
                 last_tail_page = self.latest_tail[col_index, cur_rg_index]
                 # iterating from the last page to the first
-                for rev_page in reversed(range((self.TPS+1)/MAX_RECORDS, last_tail_page+1):
+                for rev_page in reversed(range((self.TPS+1)/MAX_RECORDS, last_tail_page+1)):
                     args_rid = [self.name, 'Tail', BASE_RID, cur_rg_index, rev_page]
                     args_data = [self.name, 'Tail', col_index, cur_rg_index, rev_page]
                     for rev_rec in reversed(range(0, MAX_RECORDS)):
