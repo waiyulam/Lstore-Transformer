@@ -69,7 +69,7 @@ class Query:
     # def select(self, key, column, query_columns):
     ###
 
-    def select(self, key, query_columns):
+    def select(self, key, column, query_columns):
         # Get the indirection id given choice of primary keys
         page_pointer = self.table.index.locate(self.table.key,key)
         # collect base meta datas of this record
