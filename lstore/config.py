@@ -11,7 +11,7 @@ MAX_RECORDS = 512 # 4096/8
 
 # defined parameters
 PAGE_RANGE = 16
-MERGE_TRIGGER = 2*MAX_RECORDS # number of updates within page range
+MERGE_TRIGGER = 2*MAX_RECORDS # integer number of page size
 
 # meta_data
 NUM_METAS = 7

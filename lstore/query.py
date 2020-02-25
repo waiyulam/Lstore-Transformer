@@ -38,6 +38,7 @@ class Query:
     """
 
     def insert(self, *columns):
+        print("insert is running")
         columns = list(columns)
         rid = self.table.num_records
         #rid = int.from_bytes(('b'+ str(self.table.num_records)).encode(), byteorder = "big")
@@ -72,6 +73,7 @@ class Query:
 
     def select(self, key, column, query_columns):
         # Get the indirection id given choice of primary keys
+        print("select is running")
         page_pointer = self.table.index.locate(self.table.key,key)
         # collect base meta datas of this record
 
@@ -104,6 +106,7 @@ class Query:
     """
     def update(self, key, *columns):
         # get the indirection in base pages given specified key\
+        print("check update")
         page_pointer = self.table.index.locate(self.table.key,key)
         update_range_index, update_record_page_index,update_record_index = page_pointer[0],page_pointer[1], page_pointer[2]
 
