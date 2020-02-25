@@ -26,7 +26,7 @@ class Query:
 
     def __init__(self, table):
         self.table = table
-        #self.table.index = Index(self.table)
+        self.index = Index(self.table)
         # pointer contains page range, page number, indices within page
         self.page_pointer = [0,0,0]
         pass
@@ -56,7 +56,7 @@ class Query:
         range_indice = self.table.num_records // (MAX_RECORDS * PAGE_RANGE)
         range_remainder = self.table.num_records % (MAX_RECORDS * PAGE_RANGE)
         self.page_pointer = [range_indice, range_remainder//MAX_RECORDS, range_remainder%MAX_RECORDS]
-        self.table.index.update_index(columns[self.table.key],self.page_pointer,self.table.key)
+        self.index.update_index(columns[self.table.key],self.page_pointer,self.table.key)
         # record_page_index,record_index = self.table.get(columns[self.table.key])
         # if (self.page_pointer != [record_page_index,record_index]):
         #     print("error message"+str(self.page_pointer) + str([record_page_index,record_index]))
@@ -69,9 +69,9 @@ class Query:
     # def select(self, key, column, query_columns):
     ###
 
-    def select(self, key, column, query_columns):
+    def select(self, key, query_columns):
         # Get the indirection id given choice of primary keys
-        page_pointer = self.table.index.locate(self.table.key,key)
+        page_pointer = self.index.locate(self.table.key,key)
         # collect base meta datas of this record
 
         args = [self.table.name, "Base", SCHEMA_ENCODING_COLUMN, *page_pointer]
@@ -104,7 +104,7 @@ class Query:
     """
     def update(self, key, *columns):
         # get the indirection in base pages given specified key
-        page_pointer = self.table.index.locate(self.table.key,key)
+        page_pointer = self.index.locate(self.table.key,key)
         update_range_index, update_record_page_index,update_record_index = page_pointer[0],page_pointer[1], page_pointer[2]
 
         args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer]
@@ -181,7 +181,7 @@ class Query:
     def sum(self, start_range, end_range, aggregate_column_index):
         values = 0
         # locate all keys in index
-        locations = self.table.index.locate_range(start_range, end_range, self.table.key)
+        locations = self.index.locate_range(start_range, end_range, self.table.key)
         # Aggregating columns specified
         for i in range(len(locations)):
             page_pointer = locations[i]
@@ -205,13 +205,13 @@ class Query:
 
     # TODO : merging -> remove all invalidate record and key in index
     def delete(self, key):
-        #page_pointer = self.table.index.locate(self.table.key,key)
+        #page_pointer = self.index.locate(self.table.key,key)
         null_value = []
         for i in range(self.table.num_columns):
             null_value.append(MAXINT)
 
         #page_range, page_index, record_index = page_pointer[0],page_pointer[1], page_pointer[2]
-        page_pointer = self.table.index.locate(self.table.key,key)
+        page_pointer = self.index.locate(self.table.key,key)
         update_range_index, update_record_page_index,update_record_index = page_pointer[0],page_pointer[1], page_pointer[2]
 
         args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer]
