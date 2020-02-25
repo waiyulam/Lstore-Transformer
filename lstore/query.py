@@ -69,7 +69,7 @@ class Query:
     # def select(self, key, column, query_columns):
     ###
 
-    def select(self, key, column, query_columns):
+    def select(self, key, query_columns):
         # Get the indirection id given choice of primary keys
         page_pointer = self.table.index.locate(self.table.key,key)
         # collect base meta datas of this record
@@ -119,7 +119,8 @@ class Query:
                 # self.table.page_directory["Base"][NUM_METAS+query_col][update_range_index].Hash_insert(int.from_bytes(base_rid,byteorder='big'))
                 # compute new tail record TID
                 self.table.page_range_meta[query_col, update_range_index][1] += 1
-                self.table.Hashmap[query_col, update_range_index, base_id] = 1
+                self.table.Hashmap[query_col, update_range_index] = {}
+                self.table.Hashmap[query_col, update_range_index][base_id] = 1
                 tmp_indice = self.table.get_latest_tail((INDIRECTION_COLUMN, update_range_index))
                 args = [self.table.name, "Tail", INDIRECTION_COLUMN, update_range_index, tmp_indice]
                 page_records = BufferPool.get_page(*args).num_records
