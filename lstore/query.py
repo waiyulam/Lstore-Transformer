@@ -10,6 +10,7 @@ from time import time
 import datetime
 from functools import reduce
 from operator import add
+import threading
 # TODO: Change RID to all integer and set offset bit
 # TODO : implement all queries by indexing
 # TODO : implement page range
@@ -102,7 +103,7 @@ class Query:
     # Update a record with specified key and columns
     """
     def update(self, key, *columns):
-        # get the indirection in base pages given specified key
+        # get the indirection in base pages given specified key\
         page_pointer = self.table.index.locate(self.table.key,key)
         update_range_index, update_record_page_index,update_record_index = page_pointer[0],page_pointer[1], page_pointer[2]
 
@@ -170,6 +171,7 @@ class Query:
                 page.update(update_record_index, schema_encoding)
 
                 self.table.num_updates += 1
+        self.table.event.set()
 
     """
     :param start_range: int         # Start of the key range to aggregate

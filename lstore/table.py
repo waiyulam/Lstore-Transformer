@@ -6,7 +6,7 @@ from lstore.page_range import *
 from lstore.buffer_pool import BufferPool
 # queue is used for managing threads, thread is defined per column per page range
 from queue import Queue
-import _thread as thread
+import threading
 
 class Record:
 
@@ -44,9 +44,10 @@ class Table:
         self.latest_tail = {}  # Key: tuple(col, range), Value: Page_id
         self.page_range_meta = {} # Key: tuple(col, range), Value: TPS, num_updates, for tail page ranges
         self.Hashmap = {} # Key: tuple(col, range, rid), Value: 1 for updated, 0 for not, for base page ranges
+        self.event = threading.Event()
         # self.__init_pages()
         # background merge thread is running as table started
-        # thread.start_new_thread(self.__merge())
+        self.mergeThreadController()
 
     def add_latest_tail(self, column_id, page_range_id, page_id):
         # import pdb; pdb.set_trace()
@@ -70,6 +71,7 @@ class Table:
                     rid_bytes = BufferPool.get_page(*args).get(k)
                     if rid_bytes == value:
                         return i, j, k
+
     # def __init_pages(self):
     #     self.page_directory = {
     #         "Base": {},
@@ -110,48 +112,59 @@ class Table:
         # initialize threads for all the page ranges in every column
         # if their number of updates within page range is above 2 physical page
         # Insert selected page range into queue
-        self.queueThreads = Queue()
-        for i in range(NUM_METAS, NUM_METAS+self.num_columns):
-            rg_index = self.num_updates // (MAX_RECORDS*PAGE_RANGE) + 1
-            for page_range in range(rg_index):
-                last_page = self.latest_tail[i, page_range]
-                args = [self.name, 'Tail', i, page_range, last_page]
-                range_records = last_page*MAX_RECORDS + BufferPool.get_page(*args).num_records
-                if range_records > MERGE_TRIGGER:
-                    self.queueThreads.put([i, page_range])
-        # store base locations and corresponding values in some memory outside bufferpool
-        self.base_merge_vals = []
-        while not self.queueThreads.empty():
-            col_index, cur_rg_index = self.queueThreads.get()[0], self.queueThreads.get()[1]
-            cur_base_map = self.Hashmap[col_index, cur_rg_index]
-            mergeSeen = len(cur_base_map)
-            # reading a set of tail pages in reverse order
-            last_tail_page = self.latest_tail[col_index, cur_rg_index]
-            for rev_page in reversed(range(-(last_tail_page+1), 0)):
-                args_rid = [self.name, 'Tail', RID_COLUMN, cur_rg_index, rev_page]
-                args_data = [self.name, 'Tail', col_index, cur_rg_index, rev_page]
-                for rev_rec in reversed(range(-BufferPool.get_page(*args_data).num_records, 0)):
-                    rid = int.from_bytes(BufferPool.get_page(*args_rid).get(rev_rec), byteorder = 'big')
-                    if cur_base_map[rid] == 1:
-                        update_val = BufferPool.get_page(*args_data).get(rev_rec)
-                        base_rid_args = [self.name, 'Tail', BASE_RID, cur_rg_index, rev_page]
-                        base_range, base_page, base_rec = self.base_loc(RID_COLUMN, BufferPool.get_page(*base_rid_args).get(rev_rec))
-                        self.base_merge_vals.append([[col_index, cur_rg_index, rev_page, rev_rec], update_val])
-                        #self.base_dir_copy[col_index][cur_rg_index].get_value(rev_page).update(rev_rec, update_val)
-                        cur_base_map[rid] = 0
-                        mergeSeen -= 1
-                    # if all RIDs are seen for updated base records
+        while True:
+            self.event.wait()
+            self.queueThreads = Queue()
+            for i in range(NUM_METAS, NUM_METAS+self.num_columns):
+                rg_index = self.num_updates // (MAX_RECORDS*PAGE_RANGE) + 1
+                for page_range in range(rg_index):
+                    if (i, page_range) in self.latest_tail:
+                        last_page = self.latest_tail[i, page_range]
+                        args = [self.name, 'Tail', i, page_range, last_page]
+                        range_records = last_page*MAX_RECORDS + BufferPool.get_page(*args).num_records
+                        if range_records > MERGE_TRIGGER:
+                            self.queueThreads.put([i, page_range])
+            # store base locations and corresponding values in some memory outside bufferpool
+            self.base_merge_vals = []
+            if not self.queueThreads.empty():
+                col_index, cur_rg_index = self.queueThreads.get()[0], self.queueThreads.get()[1]
+                cur_base_map = self.Hashmap[col_index, cur_rg_index]
+                mergeSeen = len(cur_base_map)
+                # reading a set of tail pages in reverse order
+                last_tail_page = self.latest_tail[col_index, cur_rg_index]
+                for rev_page in reversed(range(-(last_tail_page+1), 0)):
+                    args_rid = [self.name, 'Tail', RID_COLUMN, cur_rg_index, rev_page]
+                    args_data = [self.name, 'Tail', col_index, cur_rg_index, rev_page]
+                    for rev_rec in reversed(range(-BufferPool.get_page(*args_data).num_records, 0)):
+                        rid = int.from_bytes(BufferPool.get_page(*args_rid).get(rev_rec), byteorder = 'big')
+                        if cur_base_map[rid] == 1:
+                            update_val = BufferPool.get_page(*args_data).get(rev_rec)
+                            base_rid_args = [self.name, 'Tail', BASE_RID, cur_rg_index, rev_page]
+                            base_range, base_page, base_rec = self.base_loc(RID_COLUMN, BufferPool.get_page(*base_rid_args).get(rev_rec))
+                            self.base_merge_vals.append([[col_index, cur_rg_index, rev_page, rev_rec], update_val])
+                            #self.base_dir_copy[col_index][cur_rg_index].get_value(rev_page).update(rev_rec, update_val)
+                            cur_base_map[rid] = 0
+                            mergeSeen -= 1
+                        # if all RIDs are seen for updated base records
+                        if mergeSeen == 0:
+                            break
                     if mergeSeen == 0:
                         break
-                if mergeSeen == 0:
-                    break
-            args = [self.name, 'Tail', RID_COLUMN, cur_rg_index, last_tail_page]
-            rd_index = BufferPool.get_page(*args).get(rev_rec).num_records - 1
-            last_tail_rid = int.from_bytes(BufferPool.get_page(*args).get(rd_index), byteorder = 'big')
-            # TPS updates
-            self.page_range_meta[col_index, cur_rg_index][0] = last_tail_rid
-    #     pass
+                args = [self.name, 'Tail', RID_COLUMN, cur_rg_index, last_tail_page]
+                rd_index = BufferPool.get_page(*args).get(rev_rec).num_records - 1
+                last_tail_rid = int.from_bytes(BufferPool.get_page(*args).get(rd_index), byteorder = 'big')
+                # TPS updates
+                self.page_range_meta[col_index, cur_rg_index][0] = last_tail_rid
+            else:
+                self.event.clear()
 
+
+    def mergeThreadController(self):
+        print("thread is running")
+        t = threading.Thread(target=self.__merge())
+        t.start()
+
+        print("thread is finished")
     # want to find physical location of tail record given tid
     # tid : bytesarray
     def get_tail(self,tid,column, range_index):
