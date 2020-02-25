@@ -60,17 +60,17 @@ class Table:
         return self.latest_tail[uid]
 
     # return the base location based on col and key values
-    def base_loc(self, key, value):
-        pg_range = self.table.num_records // (MAX_RECORDS * PAGE_RANGE)
-        range_remainder = self.table.num_records % (MAX_RECORDS * PAGE_RANGE)
-        pg_index, rd_index = range_remainder//MAX_RECORDS, range_remainder%MAX_RECORDS
-        for i in range(pg_range+1):
-            for j in range(pg_index+1):
-                for k in range(rd_index):
-                    arg =  [self.table.name, "Base", key, i, j]
-                    rid_bytes = BufferPool.get_page(*args).get(k)
-                    if rid_bytes == value:
-                        return i, j, k
+    # def base_loc(self, key, value):
+    #     pg_range = self.table.num_records // (MAX_RECORDS * PAGE_RANGE)
+    #     range_remainder = self.table.num_records % (MAX_RECORDS * PAGE_RANGE)
+    #     pg_index, rd_index = range_remainder//MAX_RECORDS, range_remainder%MAX_RECORDS
+    #     for i in range(pg_range+1):
+    #         for j in range(pg_index+1):
+    #             for k in range(rd_index):
+    #                 arg =  [self.table.name, "Base", key, i, j]
+    #                 rid_bytes = BufferPool.get_page(*args).get(k)
+    #                 if rid_bytes == value:
+    #                     return i, j, k
 
     # def __init_pages(self):
     #     self.page_directory = {
@@ -116,11 +116,13 @@ class Table:
             #print("merge thread is running")
             self.queueThreads = Queue()
             for i in range(NUM_METAS, NUM_METAS+self.num_columns):
+                # get the current page range
                 rg_index = self.num_updates // (MAX_RECORDS*PAGE_RANGE) + 1
                 for page_range in range(rg_index):
                     if (i, page_range) in self.latest_tail:
                         last_page = self.latest_tail[i, page_range]
                         args = [self.name, 'Tail', i, page_range, last_page]
+                        # get the total number of records in the page range
                         range_records = last_page*MAX_RECORDS + BufferPool.get_page(*args).num_records
                         if range_records > MERGE_TRIGGER:
                             self.queueThreads.put([i, page_range])
@@ -133,16 +135,16 @@ class Table:
                 mergeSeen = len(cur_base_map)
                 # reading a set of tail pages in reverse order
                 last_tail_page = self.latest_tail[col_index, cur_rg_index]
-                for rev_page in reversed(range(-(last_tail_page+1), 0)):
-                    args_rid = [self.name, 'Tail', RID_COLUMN, cur_rg_index, rev_page]
+                # iterating from the last page to the first
+                for rev_page in reversed(range((self.TPS+1)/MAX_RECORDS, last_tail_page+1):
+                    args_rid = [self.name, 'Tail', BASE_RID, cur_rg_index, rev_page]
                     args_data = [self.name, 'Tail', col_index, cur_rg_index, rev_page]
-                    for rev_rec in reversed(range(-BufferPool.get_page(*args_data).num_records, 0)):
+                    for rev_rec in reversed(range(0, MAX_RECORDS)):
                         rid = int.from_bytes(BufferPool.get_page(*args_rid).get(rev_rec), byteorder = 'big')
                         if cur_base_map[rid] == 1:
                             update_val = BufferPool.get_page(*args_data).get(rev_rec)
-                            base_rid_args = [self.name, 'Tail', BASE_RID, cur_rg_index, rev_page]
-                            base_range, base_page, base_rec = self.base_loc(RID_COLUMN, BufferPool.get_page(*base_rid_args).get(rev_rec))
-                            self.base_merge_vals.append([[col_index, cur_rg_index, rev_page, rev_rec], update_val])
+                            base_range, base_page, base_rec = rid // (MAX_RECORDS*PAGE_RANGE), rid % (MAX_RECORDS*PAGE_RANGE) // MAX_RECORDS, rid % (MAX_RECORDS*PAGE_RANGE) % MAX_RECORDS
+                            self.base_merge_vals.append([[col_index, base_range, base_page, base_rec], update_val])
                             #self.base_dir_copy[col_index][cur_rg_index].get_value(rev_page).update(rev_rec, update_val)
                             cur_base_map[rid] = 0
                             mergeSeen -= 1
@@ -151,11 +153,8 @@ class Table:
                             break
                     if mergeSeen == 0:
                         break
-                args = [self.name, 'Tail', RID_COLUMN, cur_rg_index, last_tail_page]
-                rd_index = BufferPool.get_page(*args).get(rev_rec).num_records - 1
-                last_tail_rid = int.from_bytes(BufferPool.get_page(*args).get(rd_index), byteorder = 'big')
                 # TPS updates
-                self.page_range_meta[col_index, cur_rg_index][0] = last_tail_rid
+                self.page_range_meta[col_index, cur_rg_index][0] += MERGE_TRIGGER-1 
 
 
     def mergeThreadController(self):
