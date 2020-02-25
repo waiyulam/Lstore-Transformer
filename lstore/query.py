@@ -69,7 +69,7 @@ class Query:
     # def select(self, key, column, query_columns):
     ###
 
-    def select(self, key, query_columns):
+    def select(self, key, column, query_columns):
         # Get the indirection id given choice of primary keys
         page_pointer = self.table.index.locate(self.table.key,key)
         # collect base meta datas of this record
@@ -191,10 +191,16 @@ class Query:
             base_indirection = BufferPool.get_record(*args)
 
             if (base_schema & (1<<aggregate_column_index))>>aggregate_column_index == 1:
-                values  += self.table.get_tail(int.from_bytes(base_indirection, byteorder = 'big'),aggregate_column_index, locations[i][0])
+                temp = self.table.get_tail(int.from_bytes(base_indirection, byteorder = 'big'),aggregate_column_index, locations[i][0])
+                if (temp == MAXINT): # might be deleted
+                    continue
+                values  += temp
             else:
                 args = [self.table.name, "Base", aggregate_column_index + NUM_METAS, *page_pointer]
-                values += int.from_bytes(BufferPool.get_record(*args), byteorder="big")
+                temp = int.from_bytes(BufferPool.get_record(*args), byteorder="big")
+                if (temp == MAXINT): # might be deleted
+                    continue
+                values += temp
         return values
 
     """
