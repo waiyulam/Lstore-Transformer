@@ -65,7 +65,7 @@ class BufferPool:
     def uid_to_path(cls, uid):
         """
         Convert uid to path
-        uid: tuple(table_name, base_tail, column_id, page_range_id, page_id)
+        uid: tuple(table_name, based_tail, column_id, page_range_id, page_id)
         """
         t_name, base_tail, column_id, page_range_id, page_id = uid
         path = os.path.join(cls.path, t_name, base_tail, str(column_id),
