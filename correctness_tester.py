@@ -12,8 +12,8 @@ os.system("clear")
 db = Database()
 db.open('./ECS165')
 # First Time => create_table, afterwards => get_table
-#grades_table = db.create_table('Grades', 5, 0)
-grades_table = db.get_table('Grades')
+grades_table = db.create_table('Grades', 5, 0)
+# grades_table = db.get_table('Grades')
 query = Query(grades_table)
 
 records = {}

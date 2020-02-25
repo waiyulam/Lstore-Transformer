@@ -37,10 +37,14 @@ class Table:
         self.key = key
         self.num_columns = num_columns
         # TODO: invalid input -> columns > MAX_COLUMNS
+        # self.page_directory = {}
+        #self.index = Index(self) # newly added
+        self.index = Index(self)
         self.num_updates = 0
         self.num_records = 0
-        self.index = Index(self)
         self.latest_tail = {}  # Key: tuple(col, range), Value: Page_id
+        self.page_range_meta = {} # Key: tuple(col, range), Value: TPS, num_updates
+        self.Hashmap = {} # Key: tuple(col, range, rid), Value: 1 for updated, 0 for not
         # self.__init_pages()
         # background merge thread is running as table started
         # thread.start_new_thread(self.__merge())
@@ -75,99 +79,64 @@ class Table:
     #             for k in range(page_ranges[i].get_value(j).num_records):
     #                 if key == page_ranges[i].get_value(j).get(k):
     #                     return i, j, k
-        self.__init_pages()
-        # main thread which will control merge thread
-        #self.__mergeController()
 
-    def __init_pages(self):
-        self.page_directory = {
-            "Base": {},
-            "Tail": {}
-        }
-
-        # reinitialize the page directory to accomodate the page range
-        for i in range(self.num_columns + NUM_METAS):
-            self.page_directory["Base"][i] = [Page_Range()]
-            # list of page ranges initializing the first with an empty page
-            self.page_directory["Tail"][i] = [[Page()]]
-
-    def __get_base_loc(self, col, key):
-        page_ranges = self.page_directory["Base"][col]
-        for i in range(len(page_ranges)):
-            for j in range(page_ranges[i].curr_page+1):
-                for k in range(page_ranges[i].get_value(j).num_records):
-                    if key == page_ranges[i].get_value(j).get(k):
-                        return i, j, k
     """
     Step1: Identify committed tail records in tail pages:
     Select a set of consecutive fully committed tail records (or pages) since the
     last marge within each update range
-
     Step2: Load the corresponding outdated base pages:
     For a selected set of committed tail records, load the corresponding outdated
     base pages for the given update range (limit the load to only outdated columns)
-
     optimization:
     Avoid to load sub-ranges of records that have not yet changed since the last
     merge.
-
     Step3: Consolidate the base and tail pages:
     For every updated column, the merge process will read a outdated base pages and
     applies a set of recent committed updates from the tail pages and writes out m
     new pages.
-
     First the BaseRID column of the committed tail pages are scanned in reverse
     order to find the list of the latest version of every updated record.
-
     Hashable -> track whether the latest version of a record is seen or not
-
     Apply update until the base range is seen, skipping any intermediate updates
-
     Needs special dealings with deleted records
-
     """
-    def __mergeController(self):
-        # background merge thread is running as table started
-        thread.start_new_thread(self.__merge())
-
-
     #         if range_records > MERGE_TRIGGER:
     #             cur_thread = range_Thread(cur_page_range)
     #             self.queueThreads.put(cur_thread)
 
-    def __merge(self):
-        # initialize threads for all the page ranges in every column
-        # if their number of updates within page range is above 2 physical page
-        # Insert selected page range into queue
-        self.queueThreads = Queue()
-        for i in range(NUM_METAS, NUM_METAS+self.num_columns):
-            for rg_index, cur_tail_pages in enumerate(self.page_directory["Tail"][i]):
-                range_records = (len(cur_tail_pages)-1)*MAX_RECORDS + cur_tail_pages[len(cur_tail_pages)-1].num_records
-                if range_records > MERGE_TRIGGER:
-                    self.queueThreads.put([i, rg_index])
-        # create a copy of a base batch, optimizing by only loading updated base records
-        self.base_dir_copy = self.page_directory["Base"]
-        while not self.queueThreads.empty():
-            col_index, cur_rg_index = self.queueThreads.get()[0], self.queueThreads.get()[1]
-            cur_base_map = self.page_directory["Base"][col_index][cur_rg_index].Hashmap
-            mergeSeen = len(cur_base_map)
-            # reading a set of tail pages in reverse order
-            cur_tail_batch = self.page_directory["Tail"][col_index][cur_rg_index]
-            for rev_page in reversed(range(-len(cur_tail_batch), 0)):
-                for rev_rec in reversed(range(-rev_page.num_records, 0)):
-                    rid = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
-                    if cur_base_map[rid] == 1:
-                        update_val = cur_tail_batch[rev_page].get(rev_rec)
-                        self.base_dir_copy[col_index][cur_rg_index].get_value(rev_page).update(rev_rec, update_val)
-                        cur_base_map[rid] = 0
-                        mergeSeen -= 1
-                    # if all RIDs are seen for updated base records
-                    if mergeSeen == 0:
-                        break
-                if mergeSeen == 0:
-                    break
-            self.base_dir_copy[col_index][cur_rg_index].TPS = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
-
+    # def __merge(self):
+    #     # # initialize threads for all the page ranges in every column
+    #     # # if their number of updates within page range is above 2 physical page
+    #     # # Insert selected page range into queue
+    #     # self.queueThreads = Queue()
+    #     # for i in range(NUM_METAS, NUM_METAS+self.num_columns):
+    #     #     for rg_index, cur_tail_pages in enumerate(self.page_directory["Tail"][i]):
+    #     #         range_records = (len(cur_tail_pages)-1)*MAX_RECORDS + cur_tail_pages[len(cur_tail_pages)-1].num_records
+    #     #         if range_records > MERGE_TRIGGER:
+    #     #             self.queueThreads.put([i, rg_index])
+    #     # # create a copy of a base batch, optimizing by only loading updated base records
+    #     # self.base_dir_copy = self.page_directory["Base"]
+    #     # while not self.queueThreads.empty():
+    #     #     col_index, cur_rg_index = self.queueThreads.get()[0], self.queueThreads.get()[1]
+    #     #     cur_base_map = self.page_directory["Base"][col_index][cur_rg_index].Hashmap
+    #     #     mergeSeen = len(cur_base_map)
+    #     #     # reading a set of tail pages in reverse order
+    #     #     cur_tail_batch = self.page_directory["Tail"][col_index][cur_rg_index]
+    #     #     for rev_page in reversed(range(-len(cur_tail_batch), 0)):
+    #     #         for rev_rec in reversed(range(-rev_page.num_records, 0)):
+    #     #             rid = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
+    #     #             if cur_base_map[rid] == 1:
+    #     #                 update_val = cur_tail_batch[rev_page].get(rev_rec)
+    #     #                 self.base_dir_copy[col_index][cur_rg_index].get_value(rev_page).update(rev_rec, update_val)
+    #     #                 cur_base_map[rid] = 0
+    #     #                 mergeSeen -= 1
+    #     #             # if all RIDs are seen for updated base records
+    #     #             if mergeSeen == 0:
+    #     #                 break
+    #     #         if mergeSeen == 0:
+    #     #             break
+    #     #     self.base_dir_copy[col_index][cur_rg_index].TPS = int.from_bytes(self.base_dir_copy[RID_COLUMN][cur_rg_index].get_value(rev_page).get(rev_rec), byteorder = 'big')
+    #     pass
 
     # want to find physical location of tail record given tid
     # tid : bytesarray
@@ -248,6 +217,7 @@ class Table:
 
             page.dirty = 1
             page.write(value)
+            self.page_range_meta[i, range_index] = [0, 0]
 
     def tail_page_write(self, data, range_index):
         for i, value in enumerate(data):
