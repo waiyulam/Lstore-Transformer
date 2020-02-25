@@ -41,6 +41,7 @@ class Table:
         #self.index = Index(self) # newly added
         self.num_updates = 0
         self.num_records = 0
+        self.index = Index(self)
         self.latest_tail = {}  # Key: tuple(col, range), Value: Page_id
         # self.__init_pages()
         # background merge thread is running as table started
