@@ -9,7 +9,7 @@ os.system("clear")
 
 # Student Id and 4 grades
 db = Database()
-# db.open('./ECS165')
+db.open('./ECS165')
 grades_table = db.create_table('Grades', 5, 0)
 # grades_table = db.get_table('Grades')
 query = Query(grades_table)
@@ -27,7 +27,7 @@ print("Inserting 1k records took:  \t\t\t", insert_time_1 - insert_time_0)
 # Measuring Select Performance
 select_time_0 = process_time()
 for key in records:
-    query.select(key, [1, 1, 1, 1, 1])[0]
+    query.select(key, 0, [1, 1, 1, 1, 1])[0]
 select_time_1 = process_time()
 print("Selecting 1k records took:  \t\t\t", select_time_1 - select_time_0)
 
@@ -65,4 +65,4 @@ for i in range(0, 1000):
 
 delete_time_1 = process_time()
 print("Deleting 1k records took:  \t\t\t", delete_time_1 - delete_time_0)
-# db.close()
+db.close()
