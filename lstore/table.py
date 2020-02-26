@@ -153,6 +153,21 @@ class Table:
                 page_range = BufferPool.get_base_page_range(self.name, col_index, cur_rg_index)
                 page_range_copy = copy.deepcopy(page_range)
 
+                '''
+                for testing the merge
+                '''
+                print("\n-----merge triggered----")
+                args = (self.name, "Base", col_index, 0, 0)
+                print("***Before merge***")
+                print(page_range_copy[args])
+                print("col_index: " + str(col_index))
+                print("num_records: " + str(page_range_copy[args].num_records))
+                print("original value: " + str(int.from_bytes(page_range_copy[args].get(0), byteorder='big')))
+                print("======")
+                '''
+                stops here
+                '''
+
                 merged_record = {}
                 for uid in page_range_copy.keys():
                     t_name, base_tail, col_id, range_id, page_id = uid
@@ -176,11 +191,26 @@ class Table:
                             page_range_copy[uid].update(base_rec, int.from_bytes(update_val, byteorder='big'))
                             merged_record[uid_w_record] = 1
 
-
                 # Base Page Range updates
                 BufferPool.update_base_page_range(page_range_copy)
                 # TPS updates
                 BufferPool.set_tps(self.name, col_index, cur_rg_index, new_tps)
+
+                '''
+                for testing the merge
+                '''
+                print("***After merge***")
+                print("col_index: " + str(col_index))
+                # print("base_range: " + str(base_range))
+                # print("base_page: " + str(base_page))
+                args = (self.name, "Base", col_index, base_range, base_page)
+                print(page_range_copy[args])
+                print("num_records: " + str(page_range_copy[args].num_records))
+                print("update value: " + str(int.from_bytes(page_range_copy[args].get(0), byteorder='big')))
+                print("-----merge completed----\n")
+                '''
+                stops here
+                '''
             else:
                 continue
                 #t.sleep(1)

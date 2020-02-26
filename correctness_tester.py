@@ -29,7 +29,7 @@ for i in range(0, 1000):
     # print('inserted', records[key])
 
 for key in records:
-    record = query.select(key, 0,[1, 1, 1, 1, 1])[0]
+    record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
     error = False
     for i, column in enumerate(record.columns):
         if column != records[key][i]:
@@ -51,7 +51,7 @@ for key in records:
         records[key][i] = value
         query.update(key, *updated_columns)
         # import pdb; pdb.set_trace()
-        record = query.select(key,0, [1, 1, 1, 1, 1])[0]
+        record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
         error = False
         for j, column in enumerate(record.columns):
             if column != records[key][j]:
