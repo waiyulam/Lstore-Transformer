@@ -37,6 +37,8 @@ class BufferPool:
 
     # Pop the least freuqently used page
     tstamp_directories = {}
+    
+    tps = {} # Key: (table_name, col_index, page_range_index)
 
     def __init__(self):
         print("Init BufferPool. Do Nothing ...")
@@ -75,7 +77,7 @@ class BufferPool:
 
     @classmethod
     def check_base_range(self, t_name, col_id, page_range_id):
-        page_range_path = os.path.join(BufferPool.path, t_name, "Base", col_id, page_range_id)
+        page_range_path = os.path.join(BufferPool.path, t_name, "Base", str(col_id), str(page_range_id))
         return len(os.listdir(page_range_path))
 
     @classmethod
@@ -150,7 +152,7 @@ class BufferPool:
         for page_id in range(base_page_count):
             args = [t_name, "Base", column_id, page_range_id, page_id]
             page = cls.get_page(*args)
-            page_range[args] = page
+            page_range[tuple(args)] = page
         return page_range
 
     @classmethod
@@ -158,8 +160,20 @@ class BufferPool:
         for uid, new_page in page_range.items():
             # TODO: Might need to handle old_page
             old_page = cls.page_directories[uid]
-            
+
             cls.page_directories[uid] = new_page
+
+    @classmethod
+    def get_tps(cls, t_name, column_id, page_range_id):
+        return cls.tps[(t_name, column_id, page_range_id)]
+
+    @classmethod
+    def set_tps(cls, t_name, column_id, page_range_id, value=0):
+        cls.tps[(t_name, column_id, page_range_id)] = value
+
+    @classmethod
+    def init_tps(cls, old_tps):
+        cls.tps = old_tps
 
     @classmethod
     def close(cls):

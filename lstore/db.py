@@ -61,6 +61,18 @@ class Database():
             prev_li = [t_name, base_tail, column_id, page_range_id, page_id]
         f.close()
 
+        # Restore tps to BufferPool
+        fname = os.path.join(path, "tps.pkl")
+        # Create page_directory.txt if not exist
+        if not os.path.exists(fname):
+            f = open(fname, "w+")
+            f.close()
+        else:
+            f = open(fname, "rb")
+            old_tps = pickle.load(f)
+            f.close()
+            BufferPool.init_tps(old_tps)
+
 
     def close(self):
         s_time = time.time()
@@ -90,6 +102,13 @@ class Database():
             f.write(line)
         f.close()
         print("Updating page_directory.txt: {}".format(time.time() - s_time))
+
+        s_time = time.time()
+        # Write Tps Config file
+        f = open(os.path.join(BufferPool.path, "tps.pkl"), "wb")
+        pickle.dump(BufferPool.tps, f)
+        f.close()
+        print("Updating tps.pkl: {}".format(time.time() - s_time))
 
 
     """

@@ -49,4 +49,4 @@ for i in range(0, 100):
         print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
 print("Aggregate finished")
 
-db.close()
+# db.close()
