@@ -37,8 +37,9 @@ class BufferPool:
 
     # Pop the least freuqently used page
     tstamp_directories = {}
-    
-    tps = {} # Key: (table_name, col_index, page_range_index)
+
+    tps = {}  # Key: (table_name, col_index, page_range_index), value: tps
+    latest_tail = {}  # Key: (table_name, col_index, page_range_index), value: lastest tail page id of specified page range
 
     def __init__(self):
         print("Init BufferPool. Do Nothing ...")
@@ -165,15 +166,47 @@ class BufferPool:
 
     @classmethod
     def get_tps(cls, t_name, column_id, page_range_id):
-        return cls.tps[(t_name, column_id, page_range_id)]
+        return cls.tps[t_name][(column_id, page_range_id)]
 
     @classmethod
     def set_tps(cls, t_name, column_id, page_range_id, value=0):
-        cls.tps[(t_name, column_id, page_range_id)] = value
+        if t_name not in cls.tps.keys():
+            cls.tps[t_name] = {}
+        cls.tps[t_name][(column_id, page_range_id)] = value
 
     @classmethod
-    def init_tps(cls, old_tps):
+    def copy_tps(cls, old_tps):
         cls.tps = old_tps
+
+    @classmethod
+    def init_tps(cls, t_name):
+        if t_name not in cls.tps.keys():
+            print("Set tps for key {}".format(t_name))
+            cls.tps[t_name] = {}
+
+    @classmethod
+    def get_latest_tail(cls, t_name, column_id, page_range_id):
+        "Return Latest/Last Tail Base Index of given table, column and page range"
+        return cls.latest_tail[t_name][(column_id, page_range_id)]
+
+    @classmethod
+    def set_latest_tail(cls, t_name, column_id, page_range_id, value=0):
+        cls.latest_tail[t_name][(column_id, page_range_id)] = value
+
+    @classmethod
+    def copy_latest_tail(cls, old_latest_tail):
+        cls.latest_tail = old_latest_tail
+
+    @classmethod
+    def init_latest_tail(cls, t_name):
+        if t_name not in cls.latest_tail.keys():
+            print("Set Lastest Tail for key {}".format(t_name))
+            cls.latest_tail[t_name] = {}
+
+    @classmethod
+    def get_table_tails(cls, t_name):
+        # print(cls.latest_tail[t_name].keys(), cls.latest_tail[t_name].values())
+        return cls.latest_tail[t_name].keys(), cls.latest_tail[t_name].values()
 
     @classmethod
     def close(cls):

@@ -1,5 +1,6 @@
 from lstore.db import Database
 from lstore.query import Query
+from lstore.buffer_pool import BufferPool
 
 from random import choice, randint, sample, seed
 
@@ -61,3 +62,5 @@ for i in range(0, 100):
     #     print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
 print("Aggregate finished")
 db.close()
+import pdb; pdb.set_trace()
+

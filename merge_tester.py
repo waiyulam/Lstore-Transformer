@@ -10,8 +10,8 @@ os.system("clear")
 # Student Id and 4 grades
 db = Database()
 db.open('./ECS165')
-# grades_table = db.create_table('Grades', 2, 0)
-grades_table = db.get_table('Grades')
+grades_table = db.create_table('Grades', 2, 0)
+# grades_table = db.get_table('Grades')
 query = Query(grades_table)
 records = {}
 
@@ -22,9 +22,9 @@ to trigger merge
 '''
 
 key = 914285714
-# records[key] = [key, 123456]
-# query.insert(*records[key])
-# print("Insert one record")
+records[key] = [key, 123456]
+query.insert(*records[key])
+print("Insert one record")
 
 for i in range(2000):
     record = query.select(key, 0, [1, 1])[0]
