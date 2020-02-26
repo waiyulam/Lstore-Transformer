@@ -144,13 +144,21 @@ class Table:
 
             # store base locations and corresponding values in some memory outside bufferpool
             if not self.queueThreads.empty():
-                print("merge triggered")
+                print("\n-----merge completed----")
                 col_index, cur_rg_index, old_tps, new_tps = self.queueThreads.get()
                 # print(col_index, cur_rg_index, new_tps)
 
                 page_range = BufferPool.get_base_page_range(self.name, col_index, cur_rg_index)
                 page_range_copy = copy.deepcopy(page_range)
-                
+
+                args = (self.name, "Base", col_index, 0, 0)
+                print("***Before merge***")
+                print(page_range[args])
+                print("col_index: " + str(col_index))
+                print("num_records: " + str(page_range[args].num_records))
+                print("original value: " + str(int.from_bytes(page_range[args].get(0), byteorder='big')))
+                print("======")
+
                 merged_record = {}
                 for uid in page_range_copy.keys():
                     t_name, base_tail, col_id, range_id, page_id = uid
@@ -174,11 +182,20 @@ class Table:
                             page_range_copy[uid].update(base_rec, int.from_bytes(update_val, byteorder='big'))
                             merged_record[uid_w_record] = 1
 
-                print("merge completed")
                 # Base Page Range updates
                 BufferPool.update_base_page_range(page_range_copy)
+                print("***After merge***")
+                print("col_index: " + str(col_index))
+                # print("base_range: " + str(base_range))
+                # print("base_page: " + str(base_page))
+                
+                args = (self.name, "Base", col_index, base_range, base_page)
+                print(page_range_copy[args])
+                print("num_records: " + str(page_range_copy[args].num_records))
+                print("update value: " + str(int.from_bytes(page_range_copy[args].get(0), byteorder='big')))
                 # TPS updates
                 BufferPool.set_tps(self.name, col_index, cur_rg_index, new_tps)
+                print("-----merge completed----\n")
             else:
                 t.sleep(0.01)
                 #self.event.clear()
