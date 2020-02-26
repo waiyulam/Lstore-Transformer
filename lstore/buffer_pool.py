@@ -27,6 +27,7 @@ def write_page(page, page_path):
     f.close()
 
 
+
 class BufferPool:
     size = BUFFER_POOL_SIZE
     path = None
@@ -36,6 +37,7 @@ class BufferPool:
 
     # Pop the least freuqently used page
     tstamp_directories = {}
+    tps = {} #key: tuple(table, col, range) value: tps
 
     def __init__(self):
         print("Init BufferPool. Do Nothing ...")
@@ -71,6 +73,11 @@ class BufferPool:
         path = os.path.join(cls.path, t_name, base_tail, str(column_id),
                             str(page_range_id), str(page_id) + ".pkl")
         return path
+
+    @classmethod
+    def check_base_range(self, t_name, col_id, page_range_id):
+        page_range_path = os.path.join(BufferPool.path, t_name, "Base", col_id, page_range_id)
+        return len(os.listdir(page_range_path))
 
     @classmethod
     def get_page(cls, t_name, base_tail, column_id, page_range_id, page_id):
@@ -135,6 +142,25 @@ class BufferPool:
     def get_record(cls, t_name, base_tail, column_id, page_range_id, page_id, record_id):
         page = cls.get_page(t_name, base_tail, column_id, page_range_id, page_id)
         return page.get(record_id)
+
+    @classmethod
+    def get_base_page_range(cls, t_name, column_id, page_range_id):
+        page_range = {}
+        base_page_count = cls.check_base_range(t_name, column_id, page_range_id)
+
+        for page_id in range(base_page_count):
+            args = [t_name, "Base", column_id, page_range_id, page_id]
+            page = cls.get_page(*args)
+            page_range[args] = page
+        return page_range
+
+    @classmethod
+    def update_base_page_range(cls, page_range):
+        for uid, new_page in page_range.items():
+            # TODO: Might need to handle old_page
+            old_page = cls.page_directories[uid]
+
+            cls.page_directories[uid] = new_page
 
     @classmethod
     def close(cls):

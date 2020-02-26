@@ -10,6 +10,7 @@ from queue import Queue
 import threading
 import multiprocessing as mp
 import os
+import copy
 
 class Record:
 
@@ -143,11 +144,14 @@ class Table:
                             self.queueThreads.put([i, page_range])
             #check os to get base range
             # store base locations and corresponding values in some memory outside bufferpool
-            self.base_merge_vals = []
             if not self.queueThreads.empty():
                 col_index, cur_rg_index = self.queueThreads.get()
                 cur_base_map = self.Hashmap[col_index, cur_rg_index]
                 mergeSeen = len(cur_base_map)
+
+                page_range = BufferPool.get_base_page_range(self.name, col_index, cur_rg_index)
+                page_range_copy = copy.deepcopy(page_range)
+
                 # reading a set of tail pages in reverse order
                 last_tail_page = self.latest_tail[col_index, cur_rg_index]
                 # iterating from the last page to the first
@@ -159,8 +163,10 @@ class Table:
                         if cur_base_map[rid] == 1:
                             update_val = BufferPool.get_page(*args_data).get(rev_rec)
                             base_range, base_page, base_rec = rid // (MAX_RECORDS*PAGE_RANGE), rid % (MAX_RECORDS*PAGE_RANGE) // MAX_RECORDS, rid % (MAX_RECORDS*PAGE_RANGE) % MAX_RECORDS
-                            self.base_merge_vals.append([[col_index, base_range, base_page, base_rec], update_val])
-                            #self.base_dir_copy[col_index][cur_rg_index].get_value(rev_page).update(rev_rec, update_val)
+
+                            uid = (self.name, "Base", col_index, base_range, base_page)
+                            page_range_copy[uid].update(base_rec, update_val)
+
                             cur_base_map[rid] = 0
                             mergeSeen -= 1
                         # if all RIDs are seen for updated base records
@@ -168,6 +174,8 @@ class Table:
                             break
                     if mergeSeen == 0:
                         break
+
+                BufferPool.update_base_page_range(page_range_copy)
                 # TPS updates
                 self.page_range_meta[col_index, cur_rg_index][0] += MERGE_TRIGGER-1
             else:
