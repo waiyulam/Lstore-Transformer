@@ -28,13 +28,12 @@ print("Insert one record")
 
 update_time_0 = process_time()
 t = 1
-for i in range(500):
+for i in range(2000):
     updated_columns = [None, None, None, None, None]
-    for i in range(1, grades_table.num_columns):
-        value = t
-        updated_columns[i] = value
-        query.update(key, *updated_columns)
-        t += 1
+    value = t
+    updated_columns[1] = value
+    query.update(key, *updated_columns)
+    t += 1
 update_time_1 = process_time()
 print("Updating one record for " + str(t - 1) + " times took:  \t\t\t", update_time_1 - update_time_0)
 
