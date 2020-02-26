@@ -4,3 +4,5 @@ output.txt
 template/
 ECS165/
 ~/
+.vscode/
+venv/
