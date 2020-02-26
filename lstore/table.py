@@ -116,6 +116,11 @@ class Table:
     #             cur_thread = range_Thread(cur_page_range)
     #             self.queueThreads.put(cur_thread)
 
+
+
+
+
+
     def __merge(self):
         # initialize threads for all the page ranges in every column
         # if their number of updates within page range is above 2 physical page
@@ -136,11 +141,11 @@ class Table:
                         range_records = last_page*MAX_RECORDS + BufferPool.get_page(*args).num_records
                         if range_records > MERGE_TRIGGER:
                             self.queueThreads.put([i, page_range])
+            #check os to get base range
             # store base locations and corresponding values in some memory outside bufferpool
             self.base_merge_vals = []
             if not self.queueThreads.empty():
-                comb = self.queueThreads.get()
-                col_index, cur_rg_index = comb[0], comb[1]
+                col_index, cur_rg_index = self.queueThreads.get()
                 cur_base_map = self.Hashmap[col_index, cur_rg_index]
                 mergeSeen = len(cur_base_map)
                 # reading a set of tail pages in reverse order
@@ -164,9 +169,10 @@ class Table:
                     if mergeSeen == 0:
                         break
                 # TPS updates
-                self.page_range_meta[col_index, cur_rg_index][0] = last_tail_rid
+                self.page_range_meta[col_index, cur_rg_index][0] += MERGE_TRIGGER-1
             else:
-                t.sleep(1)
+                continue
+                #t.sleep(1)
                 #self.event.clear()
 
 
