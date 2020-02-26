@@ -144,6 +144,7 @@ class Table:
 
             # store base locations and corresponding values in some memory outside bufferpool
             if not self.queueThreads.empty():
+                print("merge triggered")
                 col_index, cur_rg_index, old_tps, new_tps = self.queueThreads.get()
                 # print(col_index, cur_rg_index, new_tps)
 
@@ -173,7 +174,7 @@ class Table:
                             page_range_copy[uid].update(base_rec, int.from_bytes(update_val, byteorder='big'))
                             merged_record[uid_w_record] = 1
 
-     
+                print("merge completed")
                 # Base Page Range updates
                 BufferPool.update_base_page_range(page_range_copy)
                 # TPS updates
