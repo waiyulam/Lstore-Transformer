@@ -1,0 +1,13 @@
+# before using indexing to update and select 
+Inserting 1k records took:                       0.012498000000000002
+Selecting 1k records took:                       2.537942
+Updating 1k records took:                        20.591421999999998
+Aggregate 1k of <1000 record batch took:         19.725228
+Deleting 1k records took:                        6.947119999999998
+
+# after implement indexing using B tree ( key to page location pointer mapping and store indexing throughout lifetime of table )
+Inserting 1k records took:                       0.014234000000000004
+Selecting 1k records took:                       0.008262999999999993
+Updating 1k records took:                        0.14937
+Aggregate 1k of <1000 record batch took:         4.744797999999999
+Deleting 1k records took:                        0.009546999999999528
