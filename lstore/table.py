@@ -119,7 +119,7 @@ class Table:
 
             old_tps = BufferPool.get_tps(self.name, col_index, rg_index)
             new_tps = last_p_index*MAX_RECORDS + last_page.num_records
-            if (new_tps - old_tps) > MERGE_TRIGGER:
+            if (new_tps - old_tps) >= MERGE_TRIGGER:
                 page_range = BufferPool.get_base_page_range(self.name, col_index, rg_index)
                 page_range_copy = copy.deepcopy(page_range)
 
@@ -129,12 +129,15 @@ class Table:
                     for rec_id in range(MAX_RECORDS):
                         merged_record[(t_name, base_tail, col_id, range_id, page_id, rec_id)] = 0 # Init
 
-                print((new_tps+1)//MAX_RECORDS, last_p_index+1)
+                print(new_tps, last_p_index)
+                print((new_tps-1)//MAX_RECORDS, last_p_index-1)
+                # import pdb; pdb.set_trace()
                 # Traverse from new_tps tail page to old_tps tail page
-                for rev_page in reversed(range((new_tps+1)//MAX_RECORDS, last_p_index+1)):
+                for rev_page in reversed(range(last_p_index-1, (new_tps-1)//MAX_RECORDS)):
                     args_rid = [self.name, 'Tail', BASE_RID, rg_index, rev_page]
                     args_data = [self.name, 'Tail', col_index, rg_index, rev_page]
 
+                    # print("\n-----merge triggered----")
                     for rev_rec in reversed(range(0, MAX_RECORDS)):
                         rid = int.from_bytes(BufferPool.get_page(*args_rid).get(rev_rec), byteorder = 'big')
                         base_range, base_page, base_rec = rid // (MAX_RECORDS*PAGE_RANGE), rid % (MAX_RECORDS*PAGE_RANGE) // MAX_RECORDS, rid % (MAX_RECORDS*PAGE_RANGE) % MAX_RECORDS
@@ -145,7 +148,6 @@ class Table:
                             '''
                             for testing the merge
                             '''
-                            # print("\n-----merge triggered----")
                             # print("***Before merge***")
                             # print(page_range_copy[uid])
                             # print("col_index: " + str(col_index))
@@ -158,9 +160,11 @@ class Table:
 
                             update_val = int.from_bytes(BufferPool.get_page(*args_data).get(rev_rec), byteorder='big')
                             # import pdb; pdb.set_trace()
-                            print(uid, base_rec)
-                            print("New value should be: {}, original value is {}".format(update_val, int.from_bytes(page_range_copy[uid].get(base_rec), byteorder='big')))
-                            if update_val != MAXINT and update_val != 0:
+                            # print(new_tps, old_tps)
+                            # print(uid, base_rec)
+                            # print("New value should be: {}, original value is {}".format(update_val, int.from_bytes(page_range_copy[uid].get(base_rec), byteorder='big')))
+                            # if update_val != MAXINT and update_val != 0:
+                            if update_val != MAXINT:
                                 page_range_copy[uid].update(base_rec, update_val)
                                 # Also reset schema encoding to 0
                                 # if uid == ('Grades', 'Base', 8, 0, 0):
@@ -170,7 +174,7 @@ class Table:
                                 old_encoding = bin(old_encoding)[2:].zfill(self.num_columns)
                                 new_encoding = old_encoding[:self.num_columns-(col_index-NUM_METAS)-1] + "0" + old_encoding[self.num_columns-(col_index-NUM_METAS):]
 
-                                print("Old Encoding: {}, New Encoding: {}".format(old_encoding, new_encoding))
+                                # print("Old Encoding: {}, New Encoding: {}".format(old_encoding, new_encoding))
                                 if len(new_encoding) > self.num_columns or len(old_encoding) > self.num_columns:
                                     import pdb; pdb.set_trace()
                                 new_encoding = int(new_encoding, 2) # Convert to int
@@ -187,7 +191,7 @@ class Table:
                             # print(page_range_copy[uid])
                             # print("col_index: " + str(col_index))
                             # print("num_records: " + str(page_range_copy[uid].num_records))
-                            print("update value: " + str(int.from_bytes(page_range_copy[uid].get(base_rec), byteorder='big')))
+                            # print("update value: " + str(int.from_bytes(page_range_copy[uid].get(base_rec), byteorder='big')))
                             # print("-----merge completed----\n")
                             '''
                             # stops here
@@ -200,7 +204,7 @@ class Table:
 
 
     def mergeThreadController(self):
-        if self.num_updates > MERGE_TRIGGER:
+        if self.num_updates >= MERGE_TRIGGER:
             t = threading.Thread(target=self.__merge())
             t.start()
             t.join()
