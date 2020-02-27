@@ -71,37 +71,32 @@ class Query:
     ###
 
     def select(self, key, column, query_columns):
-        # Get the indirection id given choice of key in specific column
-        page_pointer = self.table.index.locate(column, key)
+        # Get the indirection id given choice of primary keys
+        page_pointer = self.table.index.locate(self.table.key,key)
+        # collect base meta datas of this record
 
-        records = []
-        for i in range(len(page_pointer)):
-            # collect base meta datas of each record
-            args = [self.table.name, "Base", SCHEMA_ENCODING_COLUMN, *page_pointer[i]]
-            base_schema = int.from_bytes(BufferPool.get_record(*args), byteorder='big')
-            args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer[i]]
-            base_indirection = BufferPool.get_record(*args)
+        args = [self.table.name, "Base", SCHEMA_ENCODING_COLUMN, *page_pointer]
+        base_schema = int.from_bytes(BufferPool.get_record(*args), byteorder='big')
+        args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer]
+        base_indirection = BufferPool.get_record(*args)
+        args = [self.table.name, "Base", RID_COLUMN, *page_pointer]
+        rid = BufferPool.get_record(*args)
 
-            # Total record specified by key and columns
-            res = []
-            for query_col, val in enumerate(query_columns):
-                # column is not selected
-                if val != 1:
-                    res.append(None)
-                    continue
-                if (base_schema & (1<<query_col))>>query_col == 1:
-                    res.append(self.table.get_tail(int.from_bytes(base_indirection,byteorder = 'big'),query_col, page_pointer[i][0]))
-                else:
-                    args = [self.table.name, "Base", query_col + NUM_METAS, *page_pointer[i]]
-                    res.append(int.from_bytes(BufferPool.get_record(*args), byteorder="big"))
-            
-            # construct the record with rid, primary key, columns
-            args = [self.table.name, "Base", RID_COLUMN, *page_pointer[i]]
-            rid = BufferPool.get_record(*args)
-            args = [self.table.name, "Base", NUM_METAS + self.table.key, *page_pointer[i]]
-            prim_key = BufferPool.get_record(*args)
-            record = Record(rid, prim_key, res)
-            records.append(record)
+        # Total record specified by key and columns : TA tester consider non-primary key
+        records, res = [], []
+        for query_col, val in enumerate(query_columns):
+            # column is not selected
+            if val != 1:
+                res.append(None)
+                continue
+            if (base_schema & (1<<query_col))>>query_col == 1:
+                res.append(self.table.get_tail(int.from_bytes(base_indirection,byteorder = 'big'),query_col, page_pointer[0]))
+            else:
+                args = [self.table.name, "Base", query_col + NUM_METAS, *page_pointer]
+                res.append(int.from_bytes(BufferPool.get_record(*args), byteorder="big"))
+
+        record = Record(rid,key,res)
+        records.append(record)
         return records
 
     """
