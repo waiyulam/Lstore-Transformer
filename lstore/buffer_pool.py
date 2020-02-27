@@ -162,8 +162,10 @@ class BufferPool:
             # TODO: Might need to handle old_page
             old_page = cls.page_directories[uid]
 
-            if uid == ('Grades', 'Base', 8, 0, 0):
-                import pdb; pdb.set_trace()
+            # li = [('Grades', 'Base', 7, 0, 0), ('Grades', 'Base', 8, 0, 0), ('Grades', 'Base', 9, 0, 0), ('Grades', 'Base', 10, 0, 0), ('Grades', 'Base', 11, 0, 0)]
+            # if uid in li:
+            #     print(int.from_bytes(old_page.get(256), byteorder='big'), int.from_bytes(new_page.get(256), byteorder='big'))
+            #     import pdb; pdb.set_trace()
             cls.page_directories[uid] = new_page
 
     @classmethod

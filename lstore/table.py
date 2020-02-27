@@ -111,6 +111,9 @@ class Table:
         # print(BufferPool.page_directories)
         # print(keys, p_indices)
         for (col_index, rg_index), last_p_index in zip(keys, p_indices):
+            if col_index < NUM_METAS:
+                continue
+
             args = [self.name, 'Tail', col_index, rg_index, last_p_index]
             last_page = BufferPool.get_page(*args)
 
@@ -127,7 +130,6 @@ class Table:
                         merged_record[(t_name, base_tail, col_id, range_id, page_id, rec_id)] = 0 # Init
 
                 print((new_tps+1)//MAX_RECORDS, last_p_index+1)
-
                 # Traverse from new_tps tail page to old_tps tail page
                 for rev_page in reversed(range((new_tps+1)//MAX_RECORDS, last_p_index+1)):
                     args_rid = [self.name, 'Tail', BASE_RID, rg_index, rev_page]
@@ -157,9 +159,25 @@ class Table:
                             update_val = int.from_bytes(BufferPool.get_page(*args_data).get(rev_rec), byteorder='big')
                             # import pdb; pdb.set_trace()
                             print(uid, base_rec)
-                            print("New value should be: {}".format(update_val))
-                            if update_val != MAXINT:
+                            print("New value should be: {}, original value is {}".format(update_val, int.from_bytes(page_range_copy[uid].get(base_rec), byteorder='big')))
+                            if update_val != MAXINT and update_val != 0:
                                 page_range_copy[uid].update(base_rec, update_val)
+                                # Also reset schema encoding to 0
+                                # if uid == ('Grades', 'Base', 8, 0, 0):
+                                args_schema = [self.name, "Base", SCHEMA_ENCODING_COLUMN, base_range, base_page]
+                                old_encoding = int.from_bytes(BufferPool.get_page(*args_schema).get(base_rec), byteorder="big")
+                                # import pdb; pdb.set_trace()
+                                old_encoding = bin(old_encoding)[2:].zfill(self.num_columns)
+                                new_encoding = old_encoding[:self.num_columns-(col_index-NUM_METAS)-1] + "0" + old_encoding[self.num_columns-(col_index-NUM_METAS):]
+
+                                print("Old Encoding: {}, New Encoding: {}".format(old_encoding, new_encoding))
+                                if len(new_encoding) > self.num_columns or len(old_encoding) > self.num_columns:
+                                    import pdb; pdb.set_trace()
+                                new_encoding = int(new_encoding, 2) # Convert to int
+                                BufferPool.page_directories[tuple(args_schema)].update(base_rec, new_encoding)
+
+                            # ['Grades', 'Base', 11, 0, 0, 0]                                                                      │
+
                             merged_record[uid_w_record] = 1
 
                             '''

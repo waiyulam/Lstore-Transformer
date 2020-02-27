@@ -30,7 +30,7 @@ for key in keys:
     # else:
     #     print('select on', key, ':', record)
 print("Select finished")
-
+count = 0
 for _ in range(10):
     for key in keys:
         updated_columns = [None, None, None, None, None]
@@ -45,9 +45,12 @@ for _ in range(10):
             for j, column in enumerate(record.columns):
                 if column != records[key][j]:
                     error = True
+            # print(count)
+            count += 1
             if error:
-                import pdb; pdb.set_trace()
                 print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
+                import pdb; pdb.set_trace()
+
             # else:
             #     print('update on', original, 'and', updated_columns, ':', record)
             updated_columns[i] = None
