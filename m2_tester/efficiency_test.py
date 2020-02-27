@@ -9,7 +9,7 @@ os.system("clear")
 
 # Student Id and 4 grades
 db = Database()
-db.open('m2_tester/ECS165')
+db.open('ECS165')
 
 # First Time => create_table, afterwards => get_table
 # if want to keep the same base and tail, comment INSERT and UPDATE tests
@@ -69,4 +69,4 @@ delete_time_1 = process_time()
 print("Deleting 1k records took:  \t\t\t", delete_time_1 - delete_time_0)
 db.close()
 
-os.system("rm -rf m2_tester/ECS165")
+os.system("rm -rf ECS165")

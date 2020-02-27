@@ -8,7 +8,7 @@ from random import choice, randint, sample, seed
 
 # Student Id and 4 grades
 db = Database()
-db.open('m2_tester/ECS165')
+db.open('ECS165')
 grades_table = db.get_table('Grades')
 query = Query(grades_table)
 
@@ -54,4 +54,4 @@ print("Aggregate finished")
 
 db.close()
 
-os.system("rm -rf m2_tester/ECS165")
+os.system("rm -rf ECS165")

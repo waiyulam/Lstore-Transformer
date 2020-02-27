@@ -10,7 +10,7 @@ os.system("clear")
 
 # Student Id and 4 grades
 db = Database()
-db.open('m2_tester/ECS165')
+db.open('ECS165')
 
 # First Time => create_table, afterwards => get_table
 # if want to keep the same base and tail, comment INSERT and UPDATE tests
@@ -53,7 +53,7 @@ print('Passed SELECT test.')
 '''
 UPDATE TEST: 
 for each record, there will be 4 updates, so in total there should be
-1000 * 4 = 40000 updates
+1000 * 4 = 4000 updates
 '''
 for key in records:
     updated_columns = [None, None, None, None, None]
@@ -112,4 +112,4 @@ for key in records:
 print('Passed DELETE test.')
 db.close()
 
-os.system("rm -rf m2_tester/ECS165")
+os.system("rm -rf ECS165")

@@ -10,7 +10,7 @@ os.system("clear")
 
 # Student Id and 4 grades
 db = Database()
-db.open('m2_tester/ECS165')
+db.open('ECS165')
 grades_table = db.create_table('Grades', 2, 0)
 # grades_table = db.get_table('Grades')
 query = Query(grades_table)

@@ -6,7 +6,7 @@ from lstore.query import Query
 from random import choice, randint, sample, seed
 
 db = Database()
-db.open('m2_tester/ECS165')
+db.open('ECS165')
 # Student Id and 4 grades
 grades_table = db.create_table('Grades', 5, 0)
 query = Query(grades_table)
