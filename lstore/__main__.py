@@ -28,7 +28,9 @@ update_cols = [
 ]
 
 t = Transaction()
-t.add_query(query.update, choice(keys), *choice(update_cols))
+key = choice(keys)
+t.add_query(query.update, key, *choice(update_cols))
+t.add_query(query.select, key, 0, [1, 1, 1, 1, 1])
 t.run()
 
 exit()
