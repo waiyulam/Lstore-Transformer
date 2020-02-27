@@ -90,11 +90,13 @@ class Query:
                 res.append(None)
                 continue
             if (base_schema & (1<<query_col))>>query_col == 1:
-                # print("Tail", base_schema, base_indirection)
+                # if key == 92106708:
+                #     print("Tail", base_schema, int.from_bytes(base_indirection, byteorder='big'))
                 res.append(self.table.get_tail(int.from_bytes(base_indirection,byteorder = 'big'),query_col, page_pointer[0]))
             else:
                 args = [self.table.name, "Base", query_col + NUM_METAS, *page_pointer]
-                # print(args)
+                # if key == 92106708:
+                #     print(args)
                 res.append(int.from_bytes(BufferPool.get_record(*args), byteorder="big"))
 
         record = Record(rid,key,res)
@@ -267,5 +269,6 @@ class Query:
         page = BufferPool.get_page(*args)
         page.update(update_record_index, schema_encoding)
         self.table.num_updates += 1
+        self.table.mergeThreadController()
 
     #    self.table.invalidate_record(page_range, page_index, record_index)
