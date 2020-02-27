@@ -2,8 +2,10 @@ import sys
 sys.path.append(sys.path[0] + "/..")
 from lstore.db import Database
 from lstore.query import Query
-
 from random import choice, randint, sample, seed
+import os
+
+os.system("clear")
 
 db = Database()
 db.open('ECS165')
@@ -44,4 +46,5 @@ for c in range(grades_table.num_columns):
 print("Select finished")
 
 db.close()
-exit()
+os.system("rm -rf ECS165")
+# exit()
