@@ -1,5 +1,6 @@
 from lstore.db import Database
 from lstore.query import Query
+from lstore.buffer_pool import BufferPool
 
 from random import choice, randint, sample, seed
 
@@ -29,7 +30,7 @@ for key in keys:
     # else:
     #     print('select on', key, ':', record)
 print("Select finished")
-
+count = 0
 for _ in range(10):
     for key in keys:
         updated_columns = [None, None, None, None, None]
@@ -38,14 +39,19 @@ for _ in range(10):
             updated_columns[i] = value
             original = records[key].copy()
             records[key][i] = value
+
             query.update(key, *updated_columns)
             record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
             error = False
             for j, column in enumerate(record.columns):
                 if column != records[key][j]:
                     error = True
+            # print(count)
+            count += 1
             if error:
-                print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
+                print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
+                import pdb; pdb.set_trace()
+
             # else:
             #     print('update on', original, 'and', updated_columns, ':', record)
             updated_columns[i] = None
@@ -61,3 +67,4 @@ for i in range(0, 100):
     #     print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
 print("Aggregate finished")
 db.close()
+

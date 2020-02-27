@@ -50,15 +50,10 @@ class Database():
             f.close()
         f = open(fname, "r")
         lines = f.readlines()
-        prev_li = [None] * 5
         for line in lines:
             t_name, base_tail, column_id, page_range_id, page_id = line.rstrip('\n').split(',')
             uid = (t_name, base_tail, int(column_id), int(page_range_id), int(page_id))
             BufferPool.add_page(uid)
-
-            if prev_li[-2] != page_range_id and prev_li[1] == "Tail":
-                self.tables[name2idx[t_name]].add_latest_tail(column_id, page_range_id, page_id)
-            prev_li = [t_name, base_tail, column_id, page_range_id, page_id]
         f.close()
 
         # Restore tps to BufferPool
@@ -71,7 +66,19 @@ class Database():
             f = open(fname, "rb")
             old_tps = pickle.load(f)
             f.close()
-            BufferPool.init_tps(old_tps)
+            BufferPool.copy_tps(old_tps)
+
+        # Restore latest_tail to BufferPool
+        fname = os.path.join(path, "latest_tail.pkl")
+        # Create page_directory.txt if not exist
+        if not os.path.exists(fname):
+            f = open(fname, "w+")
+            f.close()
+        else:
+            f = open(fname, "rb")
+            latest_tail = pickle.load(f)
+            f.close()
+            BufferPool.copy_latest_tail(latest_tail)
 
 
     def close(self):
@@ -84,7 +91,7 @@ class Database():
         # Write Table Config file
         for table in self.tables:
             t_name = table.name
-            os.kill(table.merge_pid, signal.SIGSTOP)
+            # os.kill(table.merge_pid, signal.SIGSTOP)
             table.merge_pid = None
             t_path = os.path.join(BufferPool.path, t_name, "table.pkl")
             write_table(t_path, table)
@@ -110,6 +117,13 @@ class Database():
         f.close()
         print("Updating tps.pkl: {}".format(time.time() - s_time))
 
+        s_time = time.time()
+        # Write latest_tail Config file
+        f = open(os.path.join(BufferPool.path, "latest_tail.pkl"), "wb")
+        pickle.dump(BufferPool.latest_tail, f)
+        f.close()
+        print("Updating latest_tail.pkl: {}".format(time.time() - s_time))
+
 
     """
     # Creates a new table
@@ -119,9 +133,12 @@ class Database():
     """
     def create_table(self, name, num_columns, key):
         table = Table(name, num_columns, key)
+        BufferPool.init_latest_tail(name)
+        BufferPool.init_tps(name)
+
         # create a new table in database
         self.tables.append(table)
-        table.mergeThreadController()
+        # table.mergeProcessController()
         return table
 
     """
@@ -139,5 +156,5 @@ class Database():
     def get_table(self, name):
         for table in self.tables:
             if (table.name == name):
-                table.mergeThreadController()
+                # table.mergeProcessController()
                 return table
