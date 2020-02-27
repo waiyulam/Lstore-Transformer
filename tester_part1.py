@@ -39,6 +39,7 @@ for _ in range(10):
             updated_columns[i] = value
             original = records[key].copy()
             records[key][i] = value
+
             query.update(key, *updated_columns)
             record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
             error = False
@@ -66,5 +67,4 @@ for i in range(0, 100):
     #     print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
 print("Aggregate finished")
 db.close()
-import pdb; pdb.set_trace()
 

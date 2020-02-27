@@ -90,13 +90,9 @@ class Query:
                 res.append(None)
                 continue
             if (base_schema & (1<<query_col))>>query_col == 1:
-                # if key == 92106708:
-                #     print("Tail", base_schema, int.from_bytes(base_indirection, byteorder='big'))
                 res.append(self.table.get_tail(int.from_bytes(base_indirection,byteorder = 'big'),query_col, page_pointer[0]))
             else:
                 args = [self.table.name, "Base", query_col + NUM_METAS, *page_pointer]
-                # if key == 92106708:
-                #     print(args)
                 res.append(int.from_bytes(BufferPool.get_record(*args), byteorder="big"))
 
         record = Record(rid,key,res)

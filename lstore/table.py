@@ -49,67 +49,8 @@ class Table:
 
         # background merge thread is running as table started
 
-    # return the base location based on col and key values
-    # def base_loc(self, key, value):
-    #     pg_range = self.table.num_records // (MAX_RECORDS * PAGE_RANGE)
-    #     range_remainder = self.table.num_records % (MAX_RECORDS * PAGE_RANGE)
-    #     pg_index, rd_index = range_remainder//MAX_RECORDS, range_remainder%MAX_RECORDS
-    #     for i in range(pg_range+1):
-    #         for j in range(pg_index+1):
-    #             for k in range(rd_index):
-    #                 arg =  [self.table.name, "Base", key, i, j]
-    #                 rid_bytes = BufferPool.get_page(*args).get(k)
-    #                 if rid_bytes == value:
-    #                     return i, j, k
-
-    # def __init_pages(self):
-    #     self.page_directory = {
-    #         "Base": {},
-    #         "Tail": {}
-    #     }
-
-    #     # reinitialize the page directory to accomodate the page range
-    #     for i in range(self.num_columns + NUM_METAS):
-    #         self.page_directory["Base"][i] = [Page_Range()]
-    #         # list of page ranges initializing the first with an empty page
-    #         self.page_directory["Tail"][i] = [[Page()]]
-
-    """
-    Step1: Identify committed tail records in tail pages:
-    Select a set of consecutive fully committed tail records (or pages) since the
-    last marge within each update range
-    Step2: Load the corresponding outdated base pages:
-    For a selected set of committed tail records, load the corresponding outdated
-    base pages for the given update range (limit the load to only outdated columns)
-    optimization:
-    Avoid to load sub-ranges of records that have not yet changed since the last
-    merge.
-    Step3: Consolidate the base and tail pages:
-    For every updated column, the merge process will read a outdated base pages and
-    applies a set of recent committed updates from the tail pages and writes out m
-    new pages.
-    First the BaseRID column of the committed tail pages are scanned in reverse
-    order to find the list of the latest version of every updated record.
-    Hashable -> track whether the latest version of a record is seen or not
-    Apply update until the base range is seen, skipping any intermediate updates
-    Needs special dealings with deleted records
-    """
-    #         if range_records > MERGE_TRIGGER:
-    #             cur_thread = range_Thread(cur_page_range)
-    #             self.queueThreads.put(cur_thread)
-
-
-
     def __merge(self):
-        # initialize threads for all the page ranges in every column
-        # if their number of updates within page range is above 2 physical page
-        # Insert selected page range into queue
-
         keys, p_indices = BufferPool.get_table_tails(self.name)
-        # print(BufferPool.tps)
-        # print(BufferPool.latest_tail)
-        # print(BufferPool.page_directories)
-        # print(keys, p_indices)
         for (col_index, rg_index), last_p_index in zip(keys, p_indices):
             if col_index < NUM_METAS:
                 continue
@@ -119,7 +60,7 @@ class Table:
 
             old_tps = BufferPool.get_tps(self.name, col_index, rg_index)
             new_tps = last_p_index*MAX_RECORDS + last_page.num_records
-            # if (new_tps - old_tps) >= MERGE_TRIGGER:
+
             page_range = BufferPool.get_base_page_range(self.name, col_index, rg_index)
             page_range_copy = copy.deepcopy(page_range)
 
@@ -131,18 +72,13 @@ class Table:
 
             start_tail_p_index = (new_tps-1)//MAX_RECORDS
             end_tail_p_index = old_tps//MAX_RECORDS
-            print("Merging Column {} Page Range {}".format(col_index, rg_index))
-            print("New Tps {} Old Tps {} Start Tail Page  {} End Tail Page {}".format(new_tps, old_tps, start_tail_p_index, end_tail_p_index))
+            # print("Merging Column {} Page Range {}".format(col_index, rg_index))
+            # print("New Tps {} Old Tps {} Start Tail Page  {} End Tail Page {}".format(new_tps, old_tps, start_tail_p_index, end_tail_p_index))
 
-            # print(new_tps, last_p_index)
-            # print((new_tps-1)//MAX_RECORDS, old_tps // MAX_RECORDS)
-            # import pdb; pdb.set_trace()
-            # Traverse from new_tps tail page to old_tps tail page
             for rev_page in reversed(range(end_tail_p_index, start_tail_p_index+1)):  # Rly need to double check, so easily to messed it up
                 args_rid = [self.name, 'Tail', BASE_RID, rg_index, rev_page]
                 args_data = [self.name, 'Tail', col_index, rg_index, rev_page]
 
-                # print("\n-----merge triggered----")
                 for rev_rec in reversed(range(0, MAX_RECORDS)):
                     rid = int.from_bytes(BufferPool.get_page(*args_rid).get(rev_rec), byteorder = 'big')
                     base_range, base_page, base_rec = rid // (MAX_RECORDS*PAGE_RANGE), rid % (MAX_RECORDS*PAGE_RANGE) // MAX_RECORDS, rid % (MAX_RECORDS*PAGE_RANGE) % MAX_RECORDS
@@ -150,59 +86,17 @@ class Table:
                     uid_w_record = (self.name, "Base", col_index, base_range, base_page, base_rec)
 
                     if merged_record[uid_w_record] == 0:
-                        '''
-                        for testing the merge
-                        '''
-                        # print("***Before merge***")
-                        # print(page_range_copy[uid])
-                        # print("col_index: " + str(col_index))
-                        # print("num_records: " + str(page_range_copy[uid].num_records))
-                        # print("original value: " + str(int.from_bytes(page_range_copy[uid].get(base_rec), byteorder='big')))
-                        # print("======")
-                        '''
-                        stops here
-                        '''
-
                         update_val = int.from_bytes(BufferPool.get_page(*args_data).get(rev_rec), byteorder='big')
-                        # import pdb; pdb.set_trace()
-                        # print(new_tps, old_tps)
-                        # print(uid, base_rec)
-                        # if rid == 92106708:
-                        #     print("New value should be: {}, original value is {}".format(update_val, int.from_bytes(page_range_copy[uid].get(base_rec), byteorder='big')))
-                        
-                        # li = [('Grades', 'Base', 8, 0, 0, 279), ('Grades', 'Base', 9, 0, 0, 279), ('Grades', 'Base', 10, 0, 0, 279)]
-                        # if uid_w_record in li:
-                        #     import pdb; pdb.set_trace()
                         if update_val != MAXINT:
                             page_range_copy[uid].update(base_rec, update_val)
                             # Also reset schema encoding to 0
-                            # if uid == ('Grades', 'Base', 8, 0, 0):
                             args_schema = [self.name, "Base", SCHEMA_ENCODING_COLUMN, base_range, base_page]
                             old_encoding = int.from_bytes(BufferPool.get_page(*args_schema).get(base_rec), byteorder="big")
-                            # import pdb; pdb.set_trace()
                             old_encoding = bin(old_encoding)[2:].zfill(self.num_columns)
                             new_encoding = old_encoding[:self.num_columns-(col_index-NUM_METAS)-1] + "0" + old_encoding[self.num_columns-(col_index-NUM_METAS):]
-
-                            # print("Old Encoding: {}, New Encoding: {}".format(old_encoding, new_encoding))
-                            if len(new_encoding) > self.num_columns or len(old_encoding) > self.num_columns:
-                                import pdb; pdb.set_trace()
                             new_encoding = int(new_encoding, 2) # Convert to int
                             BufferPool.page_directories[tuple(args_schema)].update(base_rec, new_encoding)
-
                         merged_record[uid_w_record] = 1
-
-                        '''
-                        for testing the merge
-                        '''
-                        # print("***After merge***")
-                        # print(page_range_copy[uid])
-                        # print("col_index: " + str(col_index))
-                        # print("num_records: " + str(page_range_copy[uid].num_records))
-                        # print("update value: " + str(int.from_bytes(page_range_copy[uid].get(base_rec), byteorder='big')))
-                        # print("-----merge completed----\n")
-                        '''
-                        # stops here
-                        '''
 
                 # Base Page Range updates
                 BufferPool.update_base_page_range(page_range_copy)
@@ -215,7 +109,6 @@ class Table:
             t = threading.Thread(target=self.__merge())
             t.start()
             t.join()
-        # pass
 
     def mergeProcessController(self):
 
@@ -349,7 +242,7 @@ class Table:
                 args[-2] += 1  # Increment Page Range
                 args[-1] = 0  # Reset Page Index to 0
                 page = BufferPool.get_page(*args)  # Create New Base Page Range
-                self.page_range_meta[i, range_index + 1] = [0, 0] # Assign page range meta data when initializing page range
+
                 args[1] = "Tail"
                 BufferPool.add_page(tuple(args))  # Create new Tail Page
                 self.add_latest_tail(args[2], args[3], args[4])
