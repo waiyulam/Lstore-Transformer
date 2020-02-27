@@ -91,7 +91,7 @@ class Database():
         # Write Table Config file
         for table in self.tables:
             t_name = table.name
-            os.kill(table.merge_pid, signal.SIGSTOP)
+            # os.kill(table.merge_pid, signal.SIGSTOP)
             table.merge_pid = None
             t_path = os.path.join(BufferPool.path, t_name, "table.pkl")
             write_table(t_path, table)
@@ -138,7 +138,7 @@ class Database():
 
         # create a new table in database
         self.tables.append(table)
-        table.mergeThreadController()
+        # table.mergeProcessController()
         return table
 
     """
@@ -156,5 +156,5 @@ class Database():
     def get_table(self, name):
         for table in self.tables:
             if (table.name == name):
-                table.mergeThreadController()
+                # table.mergeProcessController()
                 return table

@@ -90,9 +90,11 @@ class Query:
                 res.append(None)
                 continue
             if (base_schema & (1<<query_col))>>query_col == 1:
+                print("Tail")
                 res.append(self.table.get_tail(int.from_bytes(base_indirection,byteorder = 'big'),query_col, page_pointer[0]))
             else:
                 args = [self.table.name, "Base", query_col + NUM_METAS, *page_pointer]
+                print(args)
                 res.append(int.from_bytes(BufferPool.get_record(*args), byteorder="big"))
 
         record = Record(rid,key,res)
@@ -169,6 +171,7 @@ class Query:
 
                 self.table.num_updates += 1
         #self.table.event.set()
+        self.table.mergeThreadController()
 
     """
     :param start_range: int         # Start of the key range to aggregate
