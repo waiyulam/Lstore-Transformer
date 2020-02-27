@@ -1,6 +1,7 @@
 from lstore.db import Database
 from lstore.query import Query
 from lstore.config import *
+from random import choice, randint, sample
 from time import process_time
 
 import os
@@ -9,8 +10,8 @@ os.system("clear")
 # Student Id and 4 grades
 db = Database()
 db.open('./ECS165')
-grades_table = db.create_table('Grades', 2, 0)
-# grades_table = db.get_table('Grades')
+# grades_table = db.create_table('Grades', 2, 0)
+grades_table = db.get_table('Grades')
 query = Query(grades_table)
 records = {}
 
