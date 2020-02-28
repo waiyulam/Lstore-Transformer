@@ -129,6 +129,12 @@ class BufferPool:
         sorted_uids = sorted(cls.tstamp_directories,
                                 key=cls.tstamp_directories.get)
         oldest_uid = sorted_uids[0]  # FIXME: More complex control needed for pinning
+        temp = 0
+        while cls.page_directories[oldest_uid].pinned != 0:
+            temp += 1
+            oldest_uid = sorted_uids[temp]
+            if cls.page_directories[oldest_uid].pinned == 0:
+                break
         oldest_page = cls.page_directories[oldest_uid]
         assert(oldest_page is not None)
 
