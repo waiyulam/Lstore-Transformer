@@ -6,6 +6,8 @@ from random import choice, randint, sample, seed
 import os
 
 os.system("clear")
+if (os.path.isdir('ECS165')):
+    os.system("rm -rf ECS165")
 
 db = Database()
 db.open('ECS165')

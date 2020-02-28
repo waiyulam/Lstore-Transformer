@@ -2,8 +2,11 @@ import sys
 sys.path.append(sys.path[0] + "/..")
 from lstore.db import Database
 from lstore.query import Query
-
 from random import choice, randint, sample, seed
+import os
+os.system("clear")
+if (os.path.isdir('ECS165')):
+    os.system("rm -rf ECS165")
 
 db = Database()
 db.open('ECS165')
@@ -32,7 +35,7 @@ for key in keys:
     #     print('select on', key, ':', record)
 print("Select finished")
 
-for _ in range(1):
+for _ in range(10):
     for key in keys:
         updated_columns = [None, None, None, None, None]
         for i in range(1, grades_table.num_columns):

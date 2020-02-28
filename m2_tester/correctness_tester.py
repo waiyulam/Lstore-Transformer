@@ -7,7 +7,8 @@ from random import choice, randint, sample, seed
 import os
 os.system("clear")
 
-
+if (os.path.isdir('ECS165')):
+    os.system("rm -rf ECS165")
 # Student Id and 4 grades
 db = Database()
 db.open('ECS165')
