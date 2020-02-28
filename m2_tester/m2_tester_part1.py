@@ -23,16 +23,17 @@ for i in range(0, 1000):
 keys = sorted(list(records.keys()))
 print("Insert finished")
 
-table.index.create_index(1)
-table.index.create_index(2)
-table.index.create_index(3)
-table.index.create_index(4)
+grades_table.index.create_index(1)
+grades_table.index.create_index(2)
+grades_table.index.create_index(3)
+grades_table.index.create_index(4)
 
-for c in range(self.num_columns):
-    _keys = list(set(record[c] for record in records))
-    index = {v: [record for record in records if record[c] == v] for v in _keys}
+_records = [records[key] for key in keys]
+for c in range(grades_table.num_columns):
+    _keys = list(set(record[c] for record in _records))
+    index = {v: [record for record in _records if record[c] == v] for v in _keys}
     for key in _keys:
-        results = query.select(key, c, [1, 1, 1, 1, 1])
+        results = [r.columns for r in query.select(key, c, [1, 1, 1, 1, 1])]
         error = False
         if len(results) != len(index[key]):
             error = True
