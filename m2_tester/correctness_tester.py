@@ -15,7 +15,7 @@ db.open('ECS165')
 # First Time => create_table, afterwards => get_table
 # if want to keep the same base and tail, comment INSERT and UPDATE tests
 grades_table = db.create_table('Grades', 5, 0)
-# grades_table = db.get_table('Grades')
+#grades_table = db.get_table('Grades')
 
 query = Query(grades_table)
 records = {}
@@ -51,7 +51,7 @@ for key in records:
 print('Passed SELECT test.')
 
 '''
-UPDATE TEST: 
+UPDATE TEST:
 for each record, there will be 4 updates, so in total there should be
 1000 * 4 = 4000 updates
 '''
@@ -78,7 +78,7 @@ for key in records:
 print('Passed UPDATE test.')
 
 '''
-SUM TEST: 
+SUM TEST:
 Aggregate 100 of 100 record batch for each column
 '''
 num_batch = 100
