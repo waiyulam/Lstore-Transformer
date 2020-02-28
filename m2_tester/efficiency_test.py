@@ -24,7 +24,7 @@ seed(3562901)
 
 # Measuring Insert Performance
 insert_time_0 = process_time()
-for i in range(0, 1000):
+for i in range(0, 5000):
     key = 92106429 + i # distinct primary key
     records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
     query.insert(*records[key])
@@ -50,7 +50,7 @@ update_time_1 = process_time()
 print("Updating 1k records of total 4000 times took:  \t\t\t", update_time_1 - update_time_0)
 
 # Measuring Aggregate Performance
-num_batch = 100
+num_batch = 1000
 batch_size = 100
 keys = sorted(list(records.keys()))
 agg_time_0 = process_time()
