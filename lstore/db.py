@@ -31,7 +31,7 @@ class Database():
         self.tables = []
 
     def open(self, path):
-        print("BufferPool Path @ {}".format(path))
+        # print("BufferPool Path @ {}".format(path))
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -88,7 +88,7 @@ class Database():
     def close(self):
         s_time = time.time()
         BufferPool.close()
-        print("Closing BufferPool took: {}".format(time.time() - s_time))
+        # print("Closing BufferPool took: {}".format(time.time() - s_time))
 
 
         s_time = time.time()
@@ -99,7 +99,7 @@ class Database():
             table.merge_pid = None
             t_path = os.path.join(BufferPool.path, t_name, "table.pkl")
             write_table(t_path, table)
-        print("Updating table.txt: {}".format(time.time() - s_time))
+        # print("Updating table.txt: {}".format(time.time() - s_time))
 
 
         s_time = time.time()
@@ -112,21 +112,21 @@ class Database():
             line = ",".join(my_list) + "\n"
             f.write(line)
         f.close()
-        print("Updating page_directory.txt: {}".format(time.time() - s_time))
+        # print("Updating page_directory.txt: {}".format(time.time() - s_time))
 
         s_time = time.time()
         # Write Tps Config file
         f = open(os.path.join(BufferPool.path, "tps.pkl"), "wb")
         pickle.dump(BufferPool.tps, f)
         f.close()
-        print("Updating tps.pkl: {}".format(time.time() - s_time))
+        # print("Updating tps.pkl: {}".format(time.time() - s_time))
 
         s_time = time.time()
         # Write latest_tail Config file
         f = open(os.path.join(BufferPool.path, "latest_tail.pkl"), "wb")
         pickle.dump(BufferPool.latest_tail, f)
         f.close()
-        print("Updating latest_tail.pkl: {}".format(time.time() - s_time))
+        # print("Updating latest_tail.pkl: {}".format(time.time() - s_time))
 
 
     """

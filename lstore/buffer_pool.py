@@ -42,7 +42,7 @@ class BufferPool:
     latest_tail = {}  # Key: (table_name, col_index, page_range_index), value: lastest tail page id of specified page range
 
     def __init__(self):
-        print("Init BufferPool. Do Nothing ...")
+        # print("Init BufferPool. Do Nothing ...")
         pass
 
     @classmethod
@@ -192,7 +192,7 @@ class BufferPool:
     @classmethod
     def init_tps(cls, t_name):
         if t_name not in cls.tps.keys():
-            print("Set tps for key {}".format(t_name))
+            # print("Set tps for key {}".format(t_name))
             cls.tps[t_name] = {}
 
     @classmethod
@@ -211,7 +211,7 @@ class BufferPool:
     @classmethod
     def init_latest_tail(cls, t_name):
         if t_name not in cls.latest_tail.keys():
-            print("Set Lastest Tail for key {}".format(t_name))
+            # print("Set Lastest Tail for key {}".format(t_name))
             cls.latest_tail[t_name] = {}
 
     @classmethod
