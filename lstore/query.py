@@ -130,10 +130,7 @@ class Query:
             else:
                 # self.table.page_directory["Base"][NUM_METAS+query_col][update_range_index].Hash_insert(int.from_bytes(base_rid,byteorder='big'))
                 # compute new tail record TID
-                self.table.page_range_meta[query_col, update_range_index][1] += 1
-                self.table.Hashmap[query_col, update_range_index] = {}
-                self.table.Hashmap[query_col, update_range_index][base_id] = 1
-                tmp_indice = self.table.get_latest_tail((INDIRECTION_COLUMN, update_range_index))
+                tmp_indice = self.table.get_latest_tail(INDIRECTION_COLUMN, update_range_index)
                 args = [self.table.name, "Tail", INDIRECTION_COLUMN, update_range_index, tmp_indice]
                 page_records = BufferPool.get_page(*args).num_records
                 total_records = page_records + tmp_indice*MAX_RECORDS
@@ -183,6 +180,7 @@ class Query:
 
                 self.table.num_updates += 1
         #self.table.event.set()
+        self.table.mergeThreadController()
 
     """
     :param start_range: int         # Start of the key range to aggregate
@@ -239,7 +237,7 @@ class Query:
         base_rid = BufferPool.get_record(*args)
         base_id = int.from_bytes(base_rid, byteorder='big')
 
-        tmp_indice = self.table.get_latest_tail((INDIRECTION_COLUMN, update_range_index))
+        tmp_indice = self.table.get_latest_tail(INDIRECTION_COLUMN, update_range_index)
         args = [self.table.name, "Tail", INDIRECTION_COLUMN, update_range_index, tmp_indice]
         page_records = BufferPool.get_page(*args).num_records
         total_records = page_records + tmp_indice*MAX_RECORDS
@@ -278,5 +276,6 @@ class Query:
         page = BufferPool.get_page(*args)
         page.update(update_record_index, schema_encoding)
         self.table.num_updates += 1
+        self.table.mergeThreadController()
 
     #    self.table.invalidate_record(page_range, page_index, record_index)
