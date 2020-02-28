@@ -11,7 +11,7 @@ MAX_RECORDS = 512 # 4096/8
 
 # defined parameters
 PAGE_RANGE = 16
-MERGE_TRIGGER = MAX_RECORDS # integer number of page size
+MERGE_TRIGGER = 20*MAX_RECORDS # integer number of page size
 RECURSION_LIMIT=100000
 
 # meta_data

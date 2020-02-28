@@ -70,6 +70,8 @@ class Table:
                 for rec_id in range(MAX_RECORDS):
                     merged_record[(t_name, base_tail, col_id, range_id, page_id, rec_id)] = 0 # Init
 
+            max_merged_count = len(list(merged_record.keys()))
+            early_stopping = 0
             start_tail_p_index = (new_tps-1)//MAX_RECORDS
             end_tail_p_index = old_tps//MAX_RECORDS
             # print("Merging Column {} Page Range {}".format(col_index, rg_index))
@@ -97,11 +99,19 @@ class Table:
                             new_encoding = int(new_encoding, 2) # Convert to int
                             BufferPool.page_directories[tuple(args_schema)].update(base_rec, new_encoding)
                         merged_record[uid_w_record] = 1
+                        early_stopping += 1
 
-                # Base Page Range updates
-                BufferPool.update_base_page_range(page_range_copy)
-                # TPS updates
-                BufferPool.set_tps(self.name, col_index, rg_index, new_tps)
+                    if early_stopping == max_merged_count:
+                        print("Early Stopped")
+                        break
+
+                if early_stopping == max_merged_count:
+                    break
+    
+            # Base Page Range updates
+            BufferPool.update_base_page_range(page_range_copy)
+            # TPS updates
+            BufferPool.set_tps(self.name, col_index, rg_index, new_tps)
 
 
     def mergeThreadController(self):
