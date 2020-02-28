@@ -1,10 +1,15 @@
+import sys
+sys.path.append(sys.path[0] + "/..")
 from lstore.db import Database
 from lstore.query import Query
-
 from random import choice, randint, sample, seed
+import os
+os.system("clear")
+if (os.path.isdir('ECS165')):
+    os.system("rm -rf ECS165")
 
 db = Database()
-db.open('~/ECS165')
+db.open('ECS165')
 # Student Id and 4 grades
 grades_table = db.create_table('Grades', 5, 0)
 query = Query(grades_table)
@@ -37,7 +42,7 @@ for c in range(self.num_columns):
                     error = True
                     break
         if error:
-            print('select error on', key, ', column', c ':', results, ', correct:', index[key])
+            print('select error on', key, ', column', c, ':', results, ', correct:', index[key])
 print("Select finished")
 
 for _ in range(10):
