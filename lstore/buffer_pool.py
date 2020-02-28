@@ -143,7 +143,10 @@ class BufferPool:
     @classmethod
     def get_record(cls, t_name, base_tail, column_id, page_range_id, page_id, record_id):
         page = cls.get_page(t_name, base_tail, column_id, page_range_id, page_id)
-        return page.get(record_id)
+        page.pinned = 1
+        record_data = page.get(record_id)
+        page.pinned = 0
+        return record_data
 
     @classmethod
     def get_base_page_range(cls, t_name, column_id, page_range_id):

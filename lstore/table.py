@@ -237,6 +237,7 @@ class Table:
                     # need a new page allocation
                     args[-1] += 1  # increment page index
                     page = BufferPool.get_page(*args)
+                    page.pinned = 1
 
                     # self.page_directory["Base"][i][-1].write()
                     # page = self.page_directory["Base"][i][-1].get()
@@ -245,7 +246,6 @@ class Table:
                 args[-2] += 1  # Increment Page Range
                 args[-1] = 0  # Reset Page Index to 0
                 page = BufferPool.get_page(*args)  # Create New Base Page Range
-
                 args[1] = "Tail"
                 BufferPool.add_page(tuple(args))  # Create new Tail Page
                 self.add_latest_tail(args[2], args[3], args[4])

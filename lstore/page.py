@@ -16,15 +16,21 @@ class Page:
     :param value: int  #
     """
     def write(self, value):
+        self.pinned = 1
         self.data[self.num_records * 8 : (self.num_records+1) * 8] = (value).to_bytes(8, byteorder='big')
+        self.pinned = 0
         self.num_records += 1
 
     def get(self, index):
+        self.pinned = 1
         return self.data[index*8 : (index+1)*8]
+        self.pinned = 0
 
     def update(self, index, value):
         self.dirty = 1
+        self.pinned = 1
         self.data[index * 8 : (index+1) * 8] = (value).to_bytes(8, byteorder='big')
+        self.pinned = 0
 
     def from_file(self, page):
         self.num_records = page.num_records
