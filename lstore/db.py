@@ -1,9 +1,13 @@
 from lstore.table import Table
 from lstore.buffer_pool import BufferPool
+from lstore.config import *
 import os
 import time
 import pickle
 import signal
+import sys
+
+sys.setrecursionlimit(RECURSION_LIMIT)
 
 # TODO: Write & Reaed latest_tail of each table to disk
 
