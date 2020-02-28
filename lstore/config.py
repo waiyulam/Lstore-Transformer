@@ -14,7 +14,7 @@ MAX_RECORDS = 512 # 4096/8
 # defined parameters
 PAGE_RANGE = 16
 MERGE_TRIGGER = 4 * MAX_RECORDS # integer number of page size
-BUFFER_POOL_SIZE = 100
+BUFFER_POOL_SIZE = 1000
 
 # meta_data
 NUM_METAS = 7
