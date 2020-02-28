@@ -81,16 +81,16 @@ class Table:
 
                 for rev_rec in reversed(range(0, MAX_RECORDS)):
                     rid = int.from_bytes(BufferPool.get_page(*args_rid).get(rev_rec), byteorder = 'big')
-                    base_range, base_page, base_rec = rid // (MAX_RECORDS*PAGE_RANGE), rid % (MAX_RECORDS*PAGE_RANGE) // MAX_RECORDS, rid % (MAX_RECORDS*PAGE_RANGE) % MAX_RECORDS
-                    uid = (self.name, "Base", col_index, base_range, base_page)
-                    uid_w_record = (self.name, "Base", col_index, base_range, base_page, base_rec)
+                    base_page, base_rec = rid % (MAX_RECORDS*PAGE_RANGE) // MAX_RECORDS, rid % (MAX_RECORDS*PAGE_RANGE) % MAX_RECORDS
+                    uid = (self.name, "Base", col_index, rg_index, base_page)
+                    uid_w_record = (self.name, "Base", col_index, rg_index, base_page, base_rec)
 
                     if merged_record[uid_w_record] == 0:
                         update_val = int.from_bytes(BufferPool.get_page(*args_data).get(rev_rec), byteorder='big')
                         if update_val != MAXINT:
                             page_range_copy[uid].update(base_rec, update_val)
                             # Also reset schema encoding to 0
-                            args_schema = [self.name, "Base", SCHEMA_ENCODING_COLUMN, base_range, base_page]
+                            args_schema = [self.name, "Base", SCHEMA_ENCODING_COLUMN, rg_index, base_page]
                             old_encoding = int.from_bytes(BufferPool.get_page(*args_schema).get(base_rec), byteorder="big")
                             old_encoding = bin(old_encoding)[2:].zfill(self.num_columns)
                             new_encoding = old_encoding[:self.num_columns-(col_index-NUM_METAS)-1] + "0" + old_encoding[self.num_columns-(col_index-NUM_METAS):]
@@ -109,34 +109,6 @@ class Table:
             t = threading.Thread(target=self.__merge())
             t.start()
             t.join()
-
-    def mergeProcessController(self):
-
-        print("thread is running")
-        r,w = os.pipe()
-        n = os.fork()
-        if n > 0:
-            os.close(w)
-            r = os.fdopen(r,'r')
-            while self.merge_pid is None:
-                res = r.read()
-                if res == "":
-                    continue
-                self.merge_pid = int(res)
-                print("merge_pid", self.merge_pid)
-            r.close()
-            print("Parent process and id is ", os.getpid())
-        else:
-            os.close(r)
-            w = os.fdopen(w,'w')
-            data = "{}".format(os.getpid())
-            print("data: ", data)
-            w.write(data)
-            w.close()
-            self.__merge()
-            print("Child process and id is: ", os.getpid())
-    #    f.start()
-        print("thread is finished")
 
     def mergeProcessController(self):
 
