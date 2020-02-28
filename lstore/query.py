@@ -204,13 +204,13 @@ class Query:
 
             if (base_schema & (1<<aggregate_column_index))>>aggregate_column_index == 1:
                 temp = self.table.get_tail(int.from_bytes(base_indirection, byteorder = 'big'),aggregate_column_index, locations[i][0][0])
-                if (temp == MAXINT): # might be deleted
+                if (temp == DELETED): # might be deleted
                     continue
                 values  += temp
             else:
                 args = [self.table.name, "Base", aggregate_column_index + NUM_METAS, *page_pointer[0]]
                 temp = int.from_bytes(BufferPool.get_record(*args), byteorder="big")
-                if (temp == MAXINT): # might be deleted
+                if (temp == DELETED): # might be deleted
                     continue
                 values += temp
         return values
@@ -225,7 +225,7 @@ class Query:
         #page_pointer = self.table.index.locate(self.table.key,key)
         null_value = []
         for i in range(self.table.num_columns):
-            null_value.append(MAXINT)
+            null_value.append(DELETED)
 
         #page_range, page_index, record_index = page_pointer[0],page_pointer[1], page_pointer[2]
         page_pointer = self.table.index.locate(self.table.key,key)

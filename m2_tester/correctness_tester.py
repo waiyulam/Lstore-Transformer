@@ -105,7 +105,7 @@ for key in records:
     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
     error = False
     for i, column in enumerate(record.columns):
-        if column != MAXINT:
+        if column != DELETED:
             error = True
     if error:
         print("record: " + str(key) + "does not delete completely")
