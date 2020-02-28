@@ -1,4 +1,5 @@
 from lstore.config import *
+from lstore.buffer_pool import BufferPool
 from BTrees.OOBTree import OOBTree
 
 from functools import reduce
@@ -23,9 +24,11 @@ class Index:
     def update_index(self, key, pointer, column_number):
         if not self.indices[column_number].has_key(key):
             # add new key to tree
-            self.indices[column_number].insert(key,pointer)
+            pointers = []
+            pointers.append(pointer)
+            self.indices[column_number].insert(key,pointers)
         else:
-            self.indices[column_number][key] = pointer
+            self.indices[column_number][key].append(pointer)
 
 
     """
@@ -53,11 +56,34 @@ class Index:
     """
 
     def create_index(self, column_number):
-        pass
+        tree = OOBTree()
+        self.indices[column_number] = tree
+        # Look through the specific column-based columns 
+        for i in range(self.table.num_records):
+            # Compute Base page pointers 
+            range_indice = i// (MAX_RECORDS * PAGE_RANGE)
+            range_remainder = i % (MAX_RECORDS * PAGE_RANGE)
+            page_pointer = [range_indice, range_remainder//MAX_RECORDS, range_remainder%MAX_RECORDS]
+            # Find Schema encoding to find the lastest column value of this record 
+            args = [self.table.name, "Base", SCHEMA_ENCODING_COLUMN, *page_pointer ]
+            base_schema = int.from_bytes(BufferPool.get_record(*args), byteorder='big')
+            # Find Indirection 
+            args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer]
+            base_indirection = BufferPool.get_record(*args)
+            # Find column value 
+            if (base_schema & (1<<column_number))>>column_number == 1:
+                key = self.table.get_tail(int.from_bytes(base_indirection,byteorder = 'big'),column_number, page_pointer[0])
+            else:
+                args = [self.table.name, "Base", column_number + NUM_METAS, *page_pointer]
+                key = (int.from_bytes(BufferPool.get_record(*args), byteorder="big"))
+            self.update_index(key, page_pointer, column_number)
+            
+
+
 
     """
     # optional: Drop index of specific column
     """
 
     def drop_index(self, column_number):
-        pass
+        self.indices[column_number] = None
