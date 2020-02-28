@@ -23,8 +23,9 @@ class Page:
 
     def get(self, index):
         self.pinned = 1
-        return self.data[index*8 : (index+1)*8]
+        data = self.data[index*8: (index+1)*8]
         self.pinned = 0
+        return data
 
     def update(self, index, value):
         self.dirty = 1

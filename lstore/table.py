@@ -110,7 +110,7 @@ class Table:
 
                 if early_stopping == max_merged_count:
                     break
-    
+
             # Base Page Range updates
             BufferPool.update_base_page_range(page_range_copy)
             # TPS updates
@@ -219,7 +219,6 @@ class Table:
                     # need a new page allocation
                     args[-1] += 1  # increment page index
                     page = BufferPool.get_page(*args)
-                    page.pinned = 1
 
                     # self.page_directory["Base"][i][-1].write()
                     # page = self.page_directory["Base"][i][-1].get()
