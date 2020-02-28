@@ -240,6 +240,7 @@ class Table:
             print("Child process and id is: ", os.getpid())
     #    f.start()
         print("thread is finished")
+   
     # want to find physical location of tail record given tid
     # tid : bytesarray
     def get_tail(self,tid,column, range_index):
