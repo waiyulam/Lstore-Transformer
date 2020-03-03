@@ -47,7 +47,7 @@ for key in records:
         updated_columns[i] = value
         query.update(key, *updated_columns)
 update_time_1 = process_time()
-print("Updating 5k records of total 40000 times took:  \t\t\t", update_time_1 - update_time_0)
+print("Updating 5k records of total 20000 times took:  \t\t\t", update_time_1 - update_time_0)
 
 # Measuring Aggregate Performance
 num_batch = 1000

@@ -57,7 +57,7 @@ class Query:
         range_indice = self.table.num_records // (MAX_RECORDS * PAGE_RANGE)
         range_remainder = self.table.num_records % (MAX_RECORDS * PAGE_RANGE)
         self.page_pointer = [range_indice, range_remainder//MAX_RECORDS, range_remainder%MAX_RECORDS]
-        # update all existed index 
+        # update all existed index
         for i in range(self.table.num_columns):
             if self.table.index.indices[i] != None:
                 self.table.index.update_index(columns[i],self.page_pointer,i)
@@ -97,12 +97,12 @@ class Query:
                 else:
                     args = [self.table.name, "Base", query_col + NUM_METAS, *page_pointer[i]]
                     res.append(int.from_bytes(BufferPool.get_record(*args), byteorder="big"))
-            
+
             # construct the record with rid, primary key, columns
             args = [self.table.name, "Base", RID_COLUMN, *page_pointer[i]]
             rid = BufferPool.get_record(*args)
             args = [self.table.name, "Base", NUM_METAS + column, *page_pointer[i]]
-            # or non_prim _key 
+            # or non_prim _key
             prim_key = BufferPool.get_record(*args)
             record = Record(rid, prim_key, res)
             records.append(record)
@@ -115,7 +115,7 @@ class Query:
         # get the indirection in base pages given specified key\
         page_pointer = self.table.index.locate(self.table.key,key)
         update_range_index, update_record_page_index,update_record_index = page_pointer[0][0],page_pointer[0][1], page_pointer[0][2]
-        # if primary key in index is also updated, then insert new entries into primary key index 
+        # if primary key in index is also updated, then insert new entries into primary key index
         if (columns[self.table.key] != None ):
              self.table.index.update_index(columns[self.table.key],page_pointer[0],self.table.key)
         args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer[0]]
@@ -130,6 +130,8 @@ class Query:
             else:
                 # self.table.page_directory["Base"][NUM_METAS+query_col][update_range_index].Hash_insert(int.from_bytes(base_rid,byteorder='big'))
                 # compute new tail record TID
+                self.table.cols_update[NUM_METAS+query_col] = 1
+                self.table.mg_rec_update(NUM_METAS+query_col, *page_pointer[0])
                 tmp_indice = self.table.get_latest_tail(INDIRECTION_COLUMN, update_range_index)
                 args = [self.table.name, "Tail", INDIRECTION_COLUMN, update_range_index, tmp_indice]
                 page_records = BufferPool.get_page(*args).num_records
