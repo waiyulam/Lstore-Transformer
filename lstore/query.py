@@ -233,6 +233,9 @@ class Query:
         page_pointer = self.table.index.locate(self.table.key,key)
         update_range_index, update_record_page_index,update_record_index = page_pointer[0][0],page_pointer[0][1], page_pointer[0][2]
 
+        self.table.cols_update[NUM_METAS+query_col] = 1
+        self.table.mg_rec_update(NUM_METAS+query_col, *page_pointer[0])
+
         args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer[0]]
         base_indirection_id = BufferPool.get_record(*args)
         args = [self.table.name, "Base", RID_COLUMN, *page_pointer[0]]
