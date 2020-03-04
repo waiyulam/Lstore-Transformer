@@ -130,7 +130,6 @@ class Query:
             else:
                 # self.table.page_directory["Base"][NUM_METAS+query_col][update_range_index].Hash_insert(int.from_bytes(base_rid,byteorder='big'))
                 # compute new tail record TID
-                self.table.cols_update[NUM_METAS+query_col] = 1
                 self.table.mg_rec_update(NUM_METAS+query_col, *page_pointer[0])
                 tmp_indice = self.table.get_latest_tail(INDIRECTION_COLUMN, update_range_index)
                 args = [self.table.name, "Tail", INDIRECTION_COLUMN, update_range_index, tmp_indice]
@@ -226,15 +225,14 @@ class Query:
     def delete(self, key):
         #page_pointer = self.table.index.locate(self.table.key,key)
         null_value = []
-        for i in range(self.table.num_columns):
-            null_value.append(DELETED)
-            self.table.cols_update[NUM_METAS+i] = 1
 
         #page_range, page_index, record_index = page_pointer[0],page_pointer[1], page_pointer[2]
         page_pointer = self.table.index.locate(self.table.key,key)
-        update_range_index, update_record_page_index,update_record_index = page_pointer[0][0],page_pointer[0][1], page_pointer[0][2]
+        for i in range(self.table.num_columns):
+            null_value.append(DELETED)
+            self.table.mg_rec_update(NUM_METAS+i, *page_pointer[0])
 
-        self.table.mg_rec_update(NUM_METAS+query_col, *page_pointer[0])
+        update_range_index, update_record_page_index,update_record_index = page_pointer[0][0],page_pointer[0][1], page_pointer[0][2]
 
         args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer[0]]
         base_indirection_id = BufferPool.get_record(*args)

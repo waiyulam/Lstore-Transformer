@@ -47,15 +47,13 @@ class Table:
         self.num_records = 0
         self.merge_pid = None
         self.merged_record = {}
-        self.cols_update = {}
-        self.ini_cols_update()
         # background merge thread is running as table started
 
 
     def __merge(self):
         keys, p_indices = BufferPool.get_table_tails(self.name)
         for (col_index, rg_index), last_p_index in zip(keys, p_indices):
-            if col_index < NUM_METAS or self.cols_update[col_index] == 0:
+            if col_index < NUM_METAS:
                 continue
 
             args = [self.name, 'Tail', col_index, rg_index, last_p_index]
@@ -67,12 +65,12 @@ class Table:
             page_range = BufferPool.get_base_page_range(self.name, col_index, rg_index)
             page_range_copy = copy.deepcopy(page_range)
 
-            # merged_record = {}
-            # for uid in page_range_copy.keys():
-            #     t_name, base_tail, col_id, range_id, page_id = uid
-            #     for rec_id in range(MAX_RECORDS):
-            #         # merged_record contains all the records within base page range
-            #         merged_record[(t_name, base_tail, col_id, range_id, page_id, rec_id)] = 0 # Init
+            merged_record = {}
+            for uid in page_range_copy.keys():
+                t_name, base_tail, col_id, range_id, page_id = uid
+                for rec_id in range(MAX_RECORDS):
+                    # merged_record contains all the records within base page range
+                    merged_record[(t_name, base_tail, col_id, range_id, page_id, rec_id)] = 0 # Init
 
             max_merged_count = len(list(self.merged_record.keys()))
             early_stopping = 0
@@ -91,8 +89,7 @@ class Table:
                     uid = (self.name, "Base", col_index, rg_index, base_page)
                     uid_w_record = (self.name, "Base", col_index, rg_index, base_page, base_rec)
 
-                    #print(self.merged_record)
-                    if self.merged_record[uid_w_record] == 0:
+                    if merged_record[uid_w_record] == 0:
                         update_val = int.from_bytes(BufferPool.get_page(*args_data).get(rev_rec), byteorder='big')
                         if update_val != MAXINT:
                             page_range_copy[uid].update(base_rec, update_val)
@@ -103,7 +100,7 @@ class Table:
                             new_encoding = old_encoding[:self.num_columns-(col_index-NUM_METAS)-1] + "0" + old_encoding[self.num_columns-(col_index-NUM_METAS):]
                             new_encoding = int(new_encoding, 2) # Convert to int
                             BufferPool.page_directories[tuple(args_schema)].update(base_rec, new_encoding)
-                        self.merged_record[uid_w_record] = 1
+                        merged_record[uid_w_record] = 1
                         early_stopping += 1
 
                     if early_stopping == max_merged_count:
@@ -118,14 +115,9 @@ class Table:
             # TPS updates
             BufferPool.set_tps(self.name, col_index, rg_index, new_tps)
             self.merged_record = {}
-            self.ini_cols_update()
 
     def mg_rec_update(self, col_index, rg_index, pg_index, rc_index):
         self.merged_record[(self.name, "Base", col_index, rg_index, pg_index, rc_index)] = 0
-
-    def ini_cols_update(self):
-        for i in range(self.num_columns):
-            self.cols_update[NUM_METAS+i] = 0
 
     def mergeThreadController(self):
         if self.num_updates % MERGE_TRIGGER == 0:
