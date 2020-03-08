@@ -21,7 +21,7 @@ def datetime_to_int(dt):
     return int(dt.strftime("%Y%m%d%H%M%S"))
 
 class Query:
-     """
+    """
     # Creates a Query object that can perform different queries on the specified table 
     Queries that fail must return False
     Queries that succeed should return the result or True
@@ -226,7 +226,7 @@ class Query:
                 values += temp
         return values
 
-     """
+    """
     # internal Method
     # Read a record with specified RID
     # Returns True upon succesful deletion

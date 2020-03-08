@@ -1,5 +1,5 @@
-from template.table import Table, Record
-from template.index import Index
+from lstore.table import Table, Record
+from lstore.index import Index
 
 class Transaction:
 
