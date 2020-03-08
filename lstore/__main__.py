@@ -1,12 +1,12 @@
-from lstore.db import Database
-from lstore.query import Query
-from lstore.transaction import Transaction
+from template.db import Database
+from template.query import Query
+from template.transaction import Transaction
 from time import process_time
 from random import choice, randrange
 
 # Student Id and 4 grades
 db = Database()
-grades_table = db.create_table('Grades', 5, 0)
+grades_table = db.create_table('Grades', 0, 5)
 query = Query(grades_table)
 keys = []
 
