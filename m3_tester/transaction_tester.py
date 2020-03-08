@@ -1,13 +1,20 @@
-from template.db import Database
-from template.query import Query
-from template.transaction import Transaction
-from template.transaction_worker import TransactionWorker
+import sys
+sys.path.append(sys.path[0] + "/..")
+from lstore.db import Database
+from lstore.query import Query
+from lstore.transaction import Transaction
+from lstore.transaction_worker import TransactionWorker
 
 import threading
 from random import choice, randint, sample, seed
 
+import os
+os.system("clear")
+if (os.path.isdir('ECS165')):
+    os.system("rm -rf ECS165")
+
 db = Database()
-db.open('/home/pkhorsand/165a-winter-2020-private/db')
+db.open('ECS165')
 grades_table = db.create_table('Grades', 5, 0)
 
 keys = []
