@@ -58,26 +58,26 @@ class Index:
     def create_index(self, column_number):
         tree = OOBTree()
         self.indices[column_number] = tree
-        # Look through the specific column-based columns 
+        # Look through the specific column-based columns
         for i in range(self.table.num_records):
-            # Compute Base page pointers 
+            # Compute Base page pointers
             range_indice = i// (MAX_RECORDS * PAGE_RANGE)
             range_remainder = i % (MAX_RECORDS * PAGE_RANGE)
             page_pointer = [range_indice, range_remainder//MAX_RECORDS, range_remainder%MAX_RECORDS]
-            # Find Schema encoding to find the lastest column value of this record 
+            # Find Schema encoding to find the lastest column value of this record
             args = [self.table.name, "Base", SCHEMA_ENCODING_COLUMN, *page_pointer ]
             base_schema = int.from_bytes(BufferPool.get_record(*args), byteorder='big')
-            # Find Indirection 
+            # Find Indirection
             args = [self.table.name, "Base", INDIRECTION_COLUMN, *page_pointer]
             base_indirection = BufferPool.get_record(*args)
-            # Find column value 
+            # Find column value
             if (base_schema & (1<<column_number))>>column_number == 1:
                 key = self.table.get_tail(int.from_bytes(base_indirection,byteorder = 'big'),column_number, page_pointer[0])
             else:
                 args = [self.table.name, "Base", column_number + NUM_METAS, *page_pointer]
                 key = (int.from_bytes(BufferPool.get_record(*args), byteorder="big"))
             self.update_index(key, page_pointer, column_number)
-            
+
 
 
 

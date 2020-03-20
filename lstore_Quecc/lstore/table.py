@@ -47,8 +47,13 @@ class Table:
         self.num_records = 0
         self.merge_pid = None
         self.merged_record = {}
-        # background merge thread is running as table started
+        # initialize the priority queues based on working threads
+        self.priority_queues = []
 
+        self.select_count = 0
+        self.update_count = 0
+        self.delete_count = 0
+        self.sum_count = 0
 
     def __merge(self):
         keys, p_indices = BufferPool.get_table_tails(self.name)
@@ -115,6 +120,12 @@ class Table:
             # TPS updates
             BufferPool.set_tps(self.name, col_index, rg_index, new_tps)
             self.merged_record = {}
+
+    def init_priority_queues(self, num_threads):
+        self.priority_queues = []
+        for i in range(num_threads):
+            q = {}
+            self.priority_queues.append(q)
 
     def mg_rec_update(self, col_index, rg_index, pg_index, rc_index):
         self.merged_record[(self.name, "Base", col_index, rg_index, pg_index, rc_index)] = 0
@@ -251,3 +262,16 @@ class Table:
 
             page.dirty = 1
             page.write(value)
+
+    def tail_column_write(self, data, column_num, range_index):
+        page_id = self.get_latest_tail(column_num, range_index)
+        args = [self.name, "Tail", column_num, range_index, page_id]
+        page = BufferPool.get_page(*args)
+
+        if not page.has_capacity():
+            args[-1] += 1
+            BufferPool.set_latest_tail(self.name, column_num, range_index, args[-1])
+            page = BufferPool.get_page(*args)
+
+        page.dirty = 1
+        page.write(data)

@@ -6,6 +6,7 @@ import pickle
 from datetime import datetime
 import time
 import copy
+import threading
 
 
 def read_page(page_path):
@@ -40,6 +41,7 @@ class BufferPool:
 
     tps = {}  # Key: (table_name, col_index, page_range_index), value: tps
     latest_tail = {}  # Key: (table_name, col_index, page_range_index), value: lastest tail page id of specified page range
+    lock = threading.Lock()
 
     def __init__(self):
         # print("Init BufferPool. Do Nothing ...")
@@ -84,6 +86,10 @@ class BufferPool:
     @classmethod
     def get_page(cls, t_name, base_tail, column_id, page_range_id, page_id):
         uid = (t_name, base_tail, column_id, page_range_id, page_id)
+        while cls.lock.locked():
+            continue
+
+        cls.lock.acquire()
         page_path = cls.uid_to_path(uid)
         # import pdb; pdb.set_trace()
 
@@ -95,6 +101,8 @@ class BufferPool:
             # Create File if not existed => Avoid calling add_page more than once to overwrite the Page()
             dirname = os.path.dirname(page_path)
             if not os.path.isdir(dirname):
+                # print("Make dir", dirname)
+                # print(uid)
                 os.makedirs(dirname)
             f = open(page_path, "w+")
             f.close()
@@ -107,21 +115,10 @@ class BufferPool:
                     cls.remove_lru_page()
                 cls.page_directories[uid] = read_page(page_path)
 
-        # Old Code: Has Bug
-        # # Page not loaded in buffer, load from disk
-        # if cls.is_page_in_buffer(uid):
-        #     # No Space in bufferbool, write LRU page to disk
-        #     if cls.is_full():
-        #         cls.remove_lru_page()
-
-        #     if os.path.isfile(page_path):
-        #         cls.page_directories[uid] = read_page(page_path)
-        #     else:
-        #         cls.add_page(uid)
-        # import pdb; pdb.set_trace()
-
         cls.tstamp_directories[uid] = datetime.timestamp(datetime.now())
-        return cls.page_directories[uid]
+        retval = cls.page_directories[uid]
+        cls.lock.release()
+        return retval
 
     @classmethod
     def remove_lru_page(cls):
