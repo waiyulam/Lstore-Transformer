@@ -171,6 +171,11 @@ query.update(*args) # update query
 query.sum(*args) # sum query 
 query.increment(*args) # increment query 
 query.delete(*args) # delete query 
+transaction_workers = [] # create transaction workers 
+transaction_workers.append(TransactionWorker([]))
+transaction = Transaction() # create transaction 
+transaction.add_query(query.select, key, 0, [1, 1, 1, 1, 1]) # add one query operation
+transaction_workers[].add_transaction(transaction)
 db.close() # close database 
 
 '''
