@@ -139,17 +139,18 @@ text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Wo
 ## Usage 
 
 '''python import lstore # open database # load table # create table 
-
-        # select query 
-        # update query 
-        # increment query 
-        # sum query 
-        # delete query 
-
-        # close database 
-
+db = Database()
+db.open('ECS165') # open database 
+grades_table = db.create_table('Grades', 5, 0) # create table 
+query = Query(grades_table) # create query interface 
+query.insert(*args) # insert query 
+grades_table.index.create_index(column) # create indexing on specified column
+query.update(*args) # update query 
+query.sum(*args) # sum query 
+query.increment(*args) # increment query 
+query.delete(*args) # delete query 
+db.close() # close database 
 '''
-
 
 ## Presentation 
 1. [Milestone 1: Single-threaded, In-memory
