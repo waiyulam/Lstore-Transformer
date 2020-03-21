@@ -1,4 +1,6 @@
 # DBMS_Transformer
+**Team**: Waiyu Lam; Wenda Xu; Ye Wang; Zhiwei Zhang; Chu-Hung Cheng   
+**Instructor**: [Mohammad Sadoghi](https://expolab.org/)
 
 ## OBJECTIVES  
 The overall goal of this milestone is to create a multi-threaded, in-memory
@@ -107,11 +109,15 @@ Quecc Architecture: ![alt
 text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Quecc_architecture.png
 "Quecc Architecture")
 
-3. **Performance Comparison**
-
+3. **Experimental Analysis** 
+   We focus on evaluating three metrics: throughput, latency, and abort
+   percentage. The abort percentage is computed as the ratio between the total
+   number of aborted transaction to the sum of the total number of attempted
+   transaction (i.e., both aborted and committed transactions).   
+   
 Effect of varing contention: ![alt
-text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Contention.png
-"Effect of varing contention")
+   text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Contention.png
+   "Effect of varing contention")
 
 Effect of worker threads: ![alt
 text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Worker_threads.png
