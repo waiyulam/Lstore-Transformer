@@ -9,10 +9,10 @@
   * [Lstore](#LSTORE)
   * [Lstore Fundamentals](#LSTORE_FUNDAMENTALS)
     + [Data Modeling](#Data_Modeling)
-    + [Bufferpool Management & Durability](#Bufferpool_Management_&_Durability)
+    + [Bufferpool Management & Durability](#Bufferpool Management & Durability)
     + [Indexing](#Indexing)
     + [Query Interface](#Query_Interface)
-    + [Transaction Semantics & Multithreading Concurrency Control](#Transaction_Semantics_&_Multithreading_Concurrency_Control)
+    + [Transaction Semantics & Multithreading Concurrency Control](#Transaction Semantics & Multithreading Concurrency_Control)
 - [Milestones](#Milestones)
 - [Usage](#Usage)
 - [Presentation](#Presentation)
@@ -65,7 +65,7 @@ Lstore Architecture: ![alt
 text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Lstore_architecture.png
 "Lstore Architecture")
 
-#### Bufferpool_Management_&_Durability 
+#### Bufferpool Management & Durability
 1. **Bufferpool Management**: 
    - To keep track of data whether, in memory (or disk), we require to have a
      page directory that maps RIDs to pages in memory (or disk) to allow fast
@@ -94,7 +94,7 @@ text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Lstore_arc
      single key along with a simple aggregation query, namely, to return the
      summation of a single column for a range of keys.
 
-#### Transaction_Semantics_&_Multithreading_Concurrency_Control
+#### Transaction Semantics & Multithreading Concurrency_Control
    1. **Transaction Semantics**: create the concept of the multi-statement
       transaction with the property of either all statements (operations) are
       successfully executed and transaction commits or none will and the
