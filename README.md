@@ -160,7 +160,7 @@ text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Quecc_arch
 
 '''python 
 
-import lstore # open database # load table # create table 
+import lstore # open database
 db = Database()
 db.open('ECS165') # open database 
 grades_table = db.create_table('Grades', 5, 0) # create table 
