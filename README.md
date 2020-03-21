@@ -126,7 +126,7 @@ text](https://github.com/waiyulam/Transformer_DBMS/blob/master/Visual/Lstore_arc
          a priori; Works extremely well under high-contention workloads
 
 Quecc Architecture: ![alt
-text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Quecc_architecture.png
+text](https://github.com/waiyulam/Transformer_DBMS/blob/master/Visual/Quecc_architecture.png
 "Quecc Architecture")
 
    3. **Experimental Analysis** 
