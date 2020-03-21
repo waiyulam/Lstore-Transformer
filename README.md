@@ -4,19 +4,19 @@
 
 # Table of Contents 
 
-- [Objectives](##OBJECTIVES)
-- [Implementation Details](##IMPLEMENTATION)
-  * [Lstore](###LSTORE)
-  * [Lstore Fundamentals](###LSTORE_FUNDAMENTALS)
-    + [Data Modeling](####Data_Modeling)
-    + [Bufferpool Management & Durability](Bufferpool_Management_&_Durability)
-    + [Indexing](####Indexing)
-    + [Query Interface](####Query_Interface)
-    + [Transaction Semantics & Multithreading Concurrency Control](Transaction_Semantics_&_Multithreading_Concurrency_Control)
-- [Milestones](https://github.com/waiyulam/DBMS_Transformer##Milestones)
-- [Usage](##Usage)
-- [Presentation](##Presentation)
-- [Sources](##Sources)
+- [Objectives](#OBJECTIVES)
+- [Implementation Details](#IMPLEMENTATION)
+  * [Lstore](#LSTORE)
+  * [Lstore Fundamentals](#LSTORE_FUNDAMENTALS)
+    + [Data Modeling](#Data_Modeling)
+    + [Bufferpool Management & Durability](#Bufferpool_Management_&_Durability)
+    + [Indexing](#Indexing)
+    + [Query Interface](#Query_Interface)
+    + [Transaction Semantics & Multithreading Concurrency Control](#Transaction_Semantics_&_Multithreading_Concurrency_Control)
+- [Milestones](#Milestones)
+- [Usage](#Usage)
+- [Presentation](#Presentation)
+- [Sources](#Sources)
 
 ## OBJECTIVES  
 The overall goal of this milestone is to create a multi-threaded, in-memory
