@@ -2,11 +2,26 @@
 **Team**: Waiyu Lam; Wenda Xu; Ye Wang; Zhiwei Zhang; Chu-Hung Cheng   
 **Instructor**: [Mohammad Sadoghi](https://expolab.org/)
 
+## Table of Contents 
+- [Objectives](#OBJECTTIVES)
+- [Implementation Details ](##IMPLEMENTATION)
+  * [Lstore](###LSTORE)
+  * [Lstore Fundamentals](###LSTORE_FUNDAMENTALS)
+    + [Data Modeling](####Data_Modeling)
+    + [Bufferpool Management & Durability](Bufferpool_Management_&_Durability)
+    + [Indexing](####Indexing)
+    + [Query Interface](####Query_Interface)
+    + [Transaction Semantics & Multithreading Concurrency Control](Transaction_Semantics_&_Multithreading_Concurrency_Control)
+- [Milestones](##Milestones)
+- [Usage](##Usage)
+- [Presentation](##Presentation)
+- [Sources](##Sources)
+
 ## OBJECTIVES  
 The overall goal of this milestone is to create a multi-threaded, in-memory
 database, based on L-Store, capable of performing simple SQL-like operations    
 
-## Implementation Details 
+## IMPLEMENTATION
 ### LSTORE 
 Lineage-based Data Store (L-Store) is a solution that combines the real-time
 processing of transactional and analytical workloads within a single unified
@@ -16,8 +31,8 @@ lazy staging of columnar data from a write-optimized (tail data) form into a
 read-optimized (base data) form in a transactionally consistent approach that
 supports querying and retaining current and historic data.
 
-### LSTORE FUNDAMENTALS 
-#### Data Modeling 
+### LSTORE_FUNDAMENTALS 
+#### Data_Modeling 
 1. **Data Storage** : 
    - The key idea of L-Store is to separate the original version of a record
      inserted into the database (a **base record**) and the subsequent updates
@@ -49,7 +64,7 @@ Lstore Architecture: ![alt
 text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Lstore_architecture.png
 "Lstore Architecture")
 
-#### Bufferpool Management & Durability 
+#### Bufferpool_Management_&_Durability 
 1. **Bufferpool Management**: 
    - To keep track of data whether, in memory (or disk), we require to have a
      page directory that maps RIDs to pages in memory (or disk) to allow fast
@@ -71,57 +86,61 @@ text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Lstore_arc
      leaf nodes are linked using a link list; therefore, a B+ tree can support
      random access as well as sequential access.
 
-#### Query Interface
+#### Query_Interface
    - simple query capabilitiesthat provided the standard SQL-like
      functionalities, which is also similar to Key-Value Stores (NoSQL). For
      this milestone, you need to provide select, insert, update, delete of a
      single key along with a simple aggregation query, namely, to return the
      summation of a single column for a range of keys.
 
-#### Multithreading Concurrency Control
-In this project, we are implementing two type of concurrency control and do
-comparison: 
-1. **Strict Two Phase Locking**: 
-   - **Lock manager** is simple reader-writer lock allow several readers to hold
-     the lock simultaneously and XOR one writer 
-   - **Strict two phase protocols** divides the execution phase of a transaction
-     into two parts. In the first part, when the transaction starts executing,
-     it seeks permission for the locks it requires. After acquiring all the
-     locks in the first phase, the transaction continues to execute normally.
-     Strict-2PL holds all the locks until the commit point and releases all the
-     locks at a time.
-   - **No wait policy** allow deadlock protectiong and failure lock acquiring
-     would cause transaction to be aborted rather than wait
-   - **Cons**: many aborts due to high contention and non-deterministic
-     concurrency control from transaction execution
+#### Transaction_Semantics_&_Multithreading_Concurrency_Control
+   1. **Transaction Semantics**: create the concept of the multi-statement
+      transaction with the property of either all statements (operations) are
+      successfully executed and transaction commits or none will and the
+      transaction aborts (i.e., atomicity). 
+   2. **Concurrency Protocol**: In this project, we are implementing two type of
+      concurrency control and do comparison
+      1. **Strict Two Phase Locking**: 
+         - **Lock manager** is simple reader-writer lock allow several readers to hold
+         the lock simultaneously and XOR one writer 
+         - **Strict two phase protocols** divides the execution phase of a transaction
+         into two parts. In the first part, when the transaction starts executing,
+         it seeks permission for the locks it requires. After acquiring all the
+         locks in the first phase, the transaction continues to execute normally.
+         Strict-2PL holds all the locks until the commit point and releases all the
+         locks at a time.
+         - **No wait policy** allow deadlock protectiong and failure lock acquiring
+         would cause transaction to be aborted rather than wait
+         - **Cons**: many aborts due to high contention and non-deterministic
+         concurrency control from transaction execution
 
-2. **QUECC**:
-   - Queue-Oriented, Control-Free, Concurrency Architecture
-   - A two parallel & independent phases of priority-driven planning &
-     execution. Phase 1: Deterministic priority-based planning of transaction
-     operations in parallel. Phase 2: Priority driven execution of plans in
-     parallel
-   - **Pros**: Efficient, parallel and deterministic in-memory transaction
-     processing; Eliminates almost all aborts by resolving transaction conflicts
-     a priori; Works extremely well under high-contention workloads
+      2. **QUECC**:
+         - Queue-Oriented, Control-Free, Concurrency Architecture
+         - A two parallel & independent phases of priority-driven planning &
+         execution. Phase 1: Deterministic priority-based planning of transaction
+         operations in parallel. Phase 2: Priority driven execution of plans in
+         parallel
+         - **Pros**: Efficient, parallel and deterministic in-memory transaction
+         processing; Eliminates almost all aborts by resolving transaction conflicts
+         a priori; Works extremely well under high-contention workloads
 
 Quecc Architecture: ![alt
 text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Quecc_architecture.png
 "Quecc Architecture")
 
-3. **Experimental Analysis** 
-   We focus on evaluating three metrics: throughput, latency, and abort
-   percentage. The abort percentage is computed as the ratio between the total
-   number of aborted transaction to the sum of the total number of attempted
-   transaction (i.e., both aborted and committed transactions).   
-   
-Effect of varing contention: ![alt
-   text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Contention.png
-   "Effect of varing contention")
+   3. **Experimental Analysis** 
+      We focus on evaluating three metrics: throughput, latency, and abort
+      percentage. The abort percentage is computed as the ratio between the total
+      number of aborted transaction to the sum of the total number of attempted
+      transaction (i.e., both aborted and committed transactions).   
+      
+   Effect of varing contention: ![alt
+      text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Contention.png
+      "Effect of varing contention")
 
-Effect of worker threads: ![alt
-text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Worker_threads.png
-"Effect of worker threads")
+   Effect of worker threads: ![alt
+   text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Worker_threads.png
+   "Effect of worker threads")
 
 ## Milestones
 1. For the [first
@@ -139,6 +158,7 @@ text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Wo
 ## Usage 
 
 '''python 
+
 import lstore # open database # load table # create table 
 db = Database()
 db.open('ECS165') # open database 
@@ -151,6 +171,7 @@ query.sum(*args) # sum query
 query.increment(*args) # increment query 
 query.delete(*args) # delete query 
 db.close() # close database 
+
 '''
 
 ## Presentation 
