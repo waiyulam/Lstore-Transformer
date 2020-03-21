@@ -1,5 +1,5 @@
 import sys
-sys.path.append(sys.path[0] + "/..")
+sys.path.append(sys.path[0] + "/../../lstore_2pl")
 from lstore_2pl.db import Database
 from lstore_2pl.query import Query
 from lstore_2pl.transaction import Transaction
