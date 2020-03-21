@@ -62,7 +62,7 @@ supports querying and retaining current and historic data.
      operation of the database.
 
 Lstore Architecture: ![alt
-text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Lstore_architecture.png
+text](https://github.com/waiyulam/Transformer_DBMS/blob/master/Visual/Lstore_architecture.png
 "Lstore Architecture")
 
 #### Bufferpool_Management
@@ -136,11 +136,11 @@ text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Quecc_arch
       transaction (i.e., both aborted and committed transactions).   
       
    Effect of varing contention: ![alt
-      text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Contention.png
+      text](https://github.com/waiyulam/Transformer_DBMS/blob/master/Visual/Varying_Contention.png
       "Effect of varing contention")
 
    Effect of worker threads: ![alt
-   text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Worker_threads.png
+   text](https://github.com/waiyulam/Transformer_DBMS/blob/master/Visual/Varying_Worker_threads.png
    "Effect of worker threads")
 
 ## Milestones
