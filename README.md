@@ -158,8 +158,7 @@ text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Quecc_arch
 
 ## Usage 
 
-'''python 
-
+```python     
 import lstore # open database # load table # create table 
 db = Database()
 db.open('ECS165') # open database 
@@ -177,8 +176,7 @@ transaction = Transaction() # create transaction
 transaction.add_query(query.select, key, 0, [1, 1, 1, 1, 1]) # add one query operation
 transaction_workers[].add_transaction(transaction)
 db.close() # close database 
-
-'''
+```
 
 ## Presentation 
 1. [Milestone 1: Single-threaded, In-memory
