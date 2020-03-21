@@ -157,6 +157,7 @@ text](https://github.com/waiyulam/Transformer_DBMS/blob/master/Visual/Quecc_arch
    we will focus on concurrency and multi-threaded transaction processing.
 
 ## Usage 
+See Testers for more basic usage of API for lstore database
 
 ```python     
 import lstore # open database # load table # create table 
