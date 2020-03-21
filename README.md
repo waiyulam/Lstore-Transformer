@@ -138,7 +138,8 @@ text](https://github.com/waiyulam/DBMS_Transformer/blob/master/Visual/Varying_Wo
 
 ## Usage 
 
-'''python import lstore # open database # load table # create table 
+'''python 
+import lstore # open database # load table # create table 
 db = Database()
 db.open('ECS165') # open database 
 grades_table = db.create_table('Grades', 5, 0) # create table 
