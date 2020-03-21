@@ -13,7 +13,7 @@
     + [Indexing](####Indexing)
     + [Query Interface](####Query_Interface)
     + [Transaction Semantics & Multithreading Concurrency Control](Transaction_Semantics_&_Multithreading_Concurrency_Control)
-- [Milestones](##Milestones)
+- [Milestones](https://github.com/waiyulam/DBMS_Transformer##Milestones)
 - [Usage](##Usage)
 - [Presentation](##Presentation)
 - [Sources](##Sources)
