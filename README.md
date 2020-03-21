@@ -2,9 +2,10 @@
 **Team**: Waiyu Lam; Wenda Xu; Ye Wang; Zhiwei Zhang; Chu-Hung Cheng   
 **Instructor**: [Mohammad Sadoghi](https://expolab.org/)
 
-## Table of Contents 
-- [Objectives](#OBJECTTIVES)
-- [Implementation Details ](##IMPLEMENTATION)
+# Table of Contents 
+
+- [Objectives](##OBJECTIVES)
+- [Implementation Details](##IMPLEMENTATION)
   * [Lstore](###LSTORE)
   * [Lstore Fundamentals](###LSTORE_FUNDAMENTALS)
     + [Data Modeling](####Data_Modeling)
