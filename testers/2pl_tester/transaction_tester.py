@@ -1,9 +1,9 @@
 import sys
-sys.path.append(sys.path[0] + "/../../lstore_2pl")
-from lstore_2pl.db import Database
-from lstore_2pl.query import Query
-from lstore_2pl.transaction import Transaction
-from lstore_2pl.transaction_worker import TransactionWorker
+sys.path.append(sys.path[0] + "/../..")
+from lstore.db_2pl import Database
+from lstore.query_2pl import Query
+from lstore.transaction_2pl import Transaction
+from lstore.transaction_worker_2pl import TransactionWorker
 
 import threading
 from random import choice, randint, sample, seed

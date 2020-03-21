@@ -1,5 +1,5 @@
-from lstore_2pl.config import *
-from lstore_2pl.page import *
+from lstore.config import *
+from lstore.page import *
 import threading 
 import os
 import heapq

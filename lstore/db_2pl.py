@@ -1,8 +1,7 @@
-from lstore_2pl.table import Table
-from lstore_2pl.buffer_pool import BufferPool
-from lstore_2pl.index import Index
-
-from lstore_2pl.config import *
+from lstore.table_2pl import Table
+from lstore.buffer_pool import BufferPool
+from lstore.index import Index
+from lstore.config import *
 import os
 import time
 import pickle

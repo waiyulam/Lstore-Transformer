@@ -1,9 +1,9 @@
 import sys
-sys.path.append(sys.path[0] + "/../../lstore_Quecc")
-from lstore.db import Database
-from lstore.query import Query
-from lstore.transaction import Transaction
-from lstore.transaction_worker import TransactionWorker
+sys.path.append(sys.path[0] + "/../..")
+from lstore.db_quecc import Database
+from lstore.query_quecc import Query
+from lstore.transaction_quecc import Transaction
+from lstore.transaction_worker_quecc import TransactionWorker
 import threading
 import os
 

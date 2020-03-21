@@ -3,7 +3,6 @@ from lstore.config import *
 from lstore.index import Index
 from time import time
 import time as t
-from lstore.page_range import *
 from lstore.buffer_pool import BufferPool
 # queue is used for managing threads, thread is defined per column per page range
 from queue import Queue

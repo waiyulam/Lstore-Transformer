@@ -1,4 +1,4 @@
-from lstore.table import Table, Record
+from lstore.table_quecc import Table, Record
 from lstore.index import Index
 from lstore.buffer_pool import BufferPool
 from lstore.config import *

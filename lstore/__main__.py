@@ -1,6 +1,6 @@
-from lstore_2pl.db import Database
-from lstore_2pl.query import Query
-from lstore_2pl.transaction import Transaction
+from lstore.db import Database
+from lstore.query_2pl import Query
+from lstore.transaction_2pl import Transaction
 from time import process_time
 from random import choice, randrange
 

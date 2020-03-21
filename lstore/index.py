@@ -1,5 +1,5 @@
-from lstore_2pl.config import *
-from lstore_2pl.buffer_pool import BufferPool
+from lstore.config import *
+from lstore.buffer_pool import BufferPool
 from BTrees.OOBTree import OOBTree
 
 from functools import reduce

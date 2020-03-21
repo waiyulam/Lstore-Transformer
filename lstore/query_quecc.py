@@ -1,9 +1,8 @@
-from lstore.table import Table, Record
+from lstore.table_quecc import Table, Record
 from lstore.index import Index
 from lstore.page import Page
 from lstore.buffer_pool import BufferPool
 from lstore.config import *
-from lstore.page_range import *
 from copy import copy
 import re
 from time import time

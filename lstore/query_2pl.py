@@ -1,9 +1,9 @@
-from lstore_2pl.table import Table, Record
-from lstore_2pl.index import Index
-from lstore_2pl.page import Page
-from lstore_2pl.buffer_pool import BufferPool
-from lstore_2pl.config import *
-from lstore_2pl.transaction import Transaction
+from lstore.table_2pl import Table, Record
+from lstore.index import Index
+from lstore.page import Page
+from lstore.buffer_pool import BufferPool
+from lstore.config import *
+from lstore.transaction_2pl import Transaction
 from copy import copy
 import re
 from time import time

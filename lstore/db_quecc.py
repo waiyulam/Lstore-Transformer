@@ -1,5 +1,6 @@
-from lstore.table import Table
+from lstore.table_quecc import Table
 from lstore.buffer_pool import BufferPool
+from lstore.index import Index
 from lstore.config import *
 import os
 import time

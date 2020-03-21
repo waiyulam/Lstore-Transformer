@@ -1,5 +1,5 @@
-from lstore_2pl.table import Table, Record
-from lstore_2pl.index import Index
+from lstore.table_2pl import Table, Record
+from lstore.index import Index
 
 class TransactionWorker:
 

@@ -1,4 +1,4 @@
-from lstore_2pl.config import *
+from lstore.config import *
 import threading
 
 

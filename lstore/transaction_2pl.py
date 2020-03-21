@@ -1,8 +1,8 @@
-from lstore_2pl.table import Table, Record
-from lstore_2pl.index import Index
-from lstore_2pl.buffer_pool import BufferPool
-from lstore_2pl.config import *
-from lstore_2pl.lock_manager import rwlock_manager
+from lstore.table_2pl import Table, Record
+from lstore.index import Index
+from lstore.buffer_pool import BufferPool
+from lstore.config import *
+from lstore.lock_manager import rwlock_manager
 
 
 class Transaction:
