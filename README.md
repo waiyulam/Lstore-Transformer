@@ -190,6 +190,6 @@ db.close() # close database
 ## Sources  
 1. [Sadoghi, Mohammad & Bhattacherjee, Souvik & Bhattacharjee, Bishwaranjan &
    Canim, Mustafa. (2018). L-Store: A Real-time OLTP and OLAP System.
-   10.5441/002/edbt.2018.65.](https://github.com/waiyulam/Lstore-Transformer/edit/master/lstore.pdf) 
+   10.5441/002/edbt.2018.65.](https://github.com/waiyulam/Lstore-Transformer/blob/master/l-store.pdf) 
 2. Qadah, Thamir & Sadoghi, Mohammad. (2018). QueCC: A Queue-oriented,
    Control-free Concurrency Architecture. 10.1145/3274808.3274810. 
