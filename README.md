@@ -1,6 +1,7 @@
 # DBMS_Transformer
 **Team**: Waiyu Lam; Wenda Xu; Ye Wang; Zhiwei Zhang; Chu-Hung Cheng   
 **Instructor**: [Mohammad Sadoghi](https://expolab.org/)
+**Course Websites**: [ECS165 WINTER 2020](https://expolab.org/ecs165a-winter2020.html)
 
 # Table of Contents 
 
